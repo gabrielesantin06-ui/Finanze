@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Finance Liquid Glass</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root { 
+            --bg: #ffffff; 
+            --glass: rgba(255, 255, 255, 0.7); 
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --text: #000000; 
+            --gray: #86868b;
+            --accent: #000000;
+            --danger: #ff3b30; 
+        }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            /* Gradiente di sfondo per far risaltare l'effetto vetro */
+            background: linear-gradient(135deg, #ffffff 0%, #f2f2f7 100%);
+            background-attachment: fixed;
+            color: var(--text); 
+            margin: 0; 
+            padding: 20px 20px 140px; 
+            -webkit-font-smoothing: antialiased;
+            letter-spacing: -0.02em;
+            min-height: 100vh;
+        }
+
+        /* Effetto Liquid Glass */
+        .glass-card { 
+            background: var(--glass); 
+            backdrop-filter: blur(20px) saturate(160%); 
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            border-radius: 24px; 
+            padding: 22px; 
+            margin-bottom: 16px; 
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .label { 
+            color: var(--gray); 
+            font-size: 11px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.06em; 
+            font-weight: 700; 
+            margin-bottom: 12px; 
+            display: block; 
+        }
+
+        .balance-main { 
+            text-align: center; 
+            padding: 60px 10px 40px; 
+            margin-bottom: 20px;
+        }
+        
+        .amount { 
+            font-size: 52px; 
+            font-weight: 800; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 12px; 
+            letter-spacing: -0.06em;
+        }
+
+        .hidden { filter: blur(20px); opacity: 0.1; }
+
+        input, select { 
+            font-family: 'Inter', sans-serif;
+            background: rgba(0, 0, 0, 0.03); 
+            border: 1px solid rgba(0, 0, 0, 0.05); 
+            color: black; 
+            padding: 16px; 
+            border-radius: 14px; 
+            width: 100%; 
+            box-sizing: border-box; 
+            margin-bottom: 12px; 
+            font-size: 16px; 
+            font-weight: 500;
+            -webkit-appearance: none; 
+            outline: none;
+        }
+
+        .month-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 15px 0; }
+        .m-btn { 
+            background: rgba(255, 255, 255, 0.5); 
+            border: 1px solid var(--glass-border);
+            color: var(--gray); 
+            font-size: 10px; 
+            padding: 10px; 
+            border-radius: 12px; 
+            text-align: center; 
+            font-weight: 700;
+        }
+        .m-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        .tab-bar { 
+            position: fixed; 
+            bottom: 20px; left: 20px; right: 20px; 
+            background: rgba(255, 255, 255, 0.7); 
+            backdrop-filter: blur(25px) saturate(200%); 
+            -webkit-backdrop-filter: blur(25px) saturate(200%);
+            display: flex; 
+            justify-content: space-around; 
+            padding: 15px 10px; 
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .tab-item { 
+            color: var(--gray); 
+            text-align: center; 
+            font-size: 11px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 4px; 
+            flex: 1; 
+            font-weight: 600;
+        }
+        .tab-item.active { color: var(--accent); }
+
+        .view { display: none; }
+        .view.active { display: block; animation: glassFade 0.5s ease; }
+        @keyframes glassFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        button { 
+            background: var(--accent); 
+            color: #fff; 
+            border: none; 
+            padding: 18px; 
+            border-radius: 16px; 
+            font-weight: 700; 
+            width: 100%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px; 
+            font-size: 15px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .btn-outline { background: rgba(255,255,255,0.5); color: var(--text); border: 1px solid var(--accent); box-shadow: none; }
+        .btn-sm { padding: 10px; font-size: 12px; margin-top: 12px; border-radius: 12px; }
+        
+        .shopping-list-item { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid rgba(0,0,0,0.03); font-size: 15px; }
+        .item-list-row { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .var-badge { background: rgba(0,0,0,0.05); color: #000; font-size: 10px; padding: 6px 12px; border-radius: 10px; margin: 6px 6px 0 0; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <div id="home" class="view active">
+        <div class="balance-main">
+            <span class="label">Patrimonio Disponibile</span>
+            <div class="amount">
+                <span id="totalDisplay">€ 0.00</span>
+                <div onclick="toggleHidden()"><i data-lucide="eye" id="eyeIcon" style="width:30px; height:30px;"></i></div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: -10px;">
+            <div class="glass-card">
+                <span class="label">Wallet Shopping</span>
+                <div id="shopWalletDisplay" style="font-size: 24px; font-weight: 800;">€ 0.00</div>
+            </div>
+            <div class="glass-card">
+                <span class="label">Spese Fisse</span>
+                <div id="fixedDisplay" style="font-size: 24px; font-weight: 800;">€ 0.00</div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <span class="label">Nuova Spesa</span>
+            <input type="text" id="shopName" placeholder="Titolo spesa">
+            <input type="number" id="shopSpend" inputmode="decimal" placeholder="Importo €">
+            <button onclick="spendShopping()"><i data-lucide="plus-circle"></i> Aggiungi</button>
+        </div>
+
+        <div class="glass-card">
+            <span class="label">Resoconto Mensile</span>
+            <div id="currentMonthShoppingList"></div>
+            <div id="monthlyTotal" style="margin-top: 18px; font-weight: 800; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 15px; display: flex; justify-content: space-between; font-size: 18px;">
+                <span>TOTALE</span>
+                <span id="monthlyTotalValue">€ 0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="prospect" class="view">
+        <h2 style="margin: 20px 0 20px 10px;">Prospetto</h2>
+        <div id="calendarList"></div>
+    </div>
+
+    <div id="setup" class="view">
+        <h2 style="margin: 20px 0 20px 10px;">Gestione</h2>
+        <div class="glass-card">
+            <span class="label">Configurazione</span>
+            <input type="number" id="baseSavings" onchange="updateData()" placeholder="Risparmi attuali">
+            <span class="label">% Shopping</span>
+            <input type="number" id="configShopPercent" onchange="updateData()" placeholder="Percentuale %">
+        </div>
+
+        <div class="glass-card">
+            <span id="setupTitle" class="label">Voci Ricorrenti</span>
+            <input type="text" id="itemName" placeholder="Esempio: Stipendio, Affitto...">
+            <input type="number" id="itemValue" placeholder="Importo €">
+            <select id="itemType">
+                <option value="income">Entrata (+)</option>
+                <option value="expense">Spesa Fissa (-)</option>
+            </select>
+            <div class="month-grid" id="mGrid">
+                <div class="m-btn active" data-m="0">GEN</div><div class="m-btn active" data-m="1">FEB</div><div class="m-btn active" data-m="2">MAR</div><div class="m-btn active" data-m="3">APR</div>
+                <div class="m-btn active" data-m="4">MAG</div><div class="m-btn active" data-m="5">GIU</div><div class="m-btn active" data-m="6">LUG</div><div class="m-btn active" data-m="7">AGO</div>
+                <div class="m-btn active" data-m="8">SET</div><div class="m-btn active" data-m="9">OTT</div><div class="m-btn active" data-m="10">NOV</div><div class="m-btn active" data-m="11">DIC</div>
+            </div>
+            <button id="addBtn" onclick="handleItem()">Salva</button>
+            <button id="cancelEdit" class="btn-outline" style="display:none" onclick="resetForm()">Annulla</button>
+        </div>
+
+        <div id="itemsContainer"></div>
+
+        <div class="glass-card" style="margin-top: 30px; border: 1px dashed rgba(0,0,0,0.2);">
+            <span class="label">Backup dati</span>
+            <button class="btn-outline" onclick="exportData()">Copia Backup</button>
+            <button class="btn-outline" onclick="importData()" style="margin-top:10px">Ripristina</button>
+        </div>
+    </div>
+
+    <nav class="tab-bar">
+        <div class="tab-item active" onclick="showV('home', this)"><i data-lucide="home"></i>Saldo</div>
+        <div class="tab-item" onclick="showV('prospect', this)"><i data-lucide="calendar"></i>Mesi</div>
+        <div class="tab-item" onclick="showV('setup', this)"><i data-lucide="settings"></i>Setup</div>
+    </nav>
+
+    <script>
+        // La logica JavaScript rimane identica per non rompere le funzioni
+        let state = JSON.parse(localStorage.getItem('fin_v8')) || {
+            savings: 0, items: [], shopPercent: 20, shopWallet: 0, shopHistory: [], variations: {}, hidden: false
+        };
+
+        let editingId = null;
+        const monthsNames = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+
+        document.querySelectorAll('.m-btn').forEach(b => b.onclick = () => b.classList.toggle('active'));
+
+        function showV(id, el) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            el.classList.add('active');
+            if(id === 'prospect') renderProspect();
+            if(id === 'home') renderHome();
+            lucide.createIcons();
+        }
+
+        function handleItem() {
+            const name = document.getElementById('itemName').value;
+            const val = parseFloat(document.getElementById('itemValue').value);
+            const type = document.getElementById('itemType').value;
+            const activeM = Array.from(document.querySelectorAll('#mGrid .m-btn.active')).map(b => parseInt(b.dataset.m));
+            if(!name || isNaN(val)) return;
+            if(editingId) {
+                const idx = state.items.findIndex(i => i.id === editingId);
+                state.items[idx] = { id: editingId, name, val, type, months: activeM };
+            } else {
+                state.items.push({ id: Date.now(), name, val, type, months: activeM });
+            }
+            resetForm(); updateData();
+        }
+
+        function resetForm() {
+            editingId = null;
+            document.getElementById('itemName').value = '';
+            document.getElementById('itemValue').value = '';
+            document.getElementById('setupTitle').innerText = "Voci Ricorrenti";
+            document.getElementById('cancelEdit').style.display = 'none';
+        }
+
+        function editItem(id) {
+            const item = state.items.find(i => i.id === id);
+            editingId = id;
+            document.getElementById('itemName').value = item.name;
+            document.getElementById('itemValue').value = item.val;
+            document.getElementById('itemType').value = item.type;
+            document.getElementById('setupTitle').innerText = "Modifica: " + item.name;
+            document.getElementById('cancelEdit').style.display = 'block';
+            document.querySelectorAll('#mGrid .m-btn').forEach(b => b.classList.toggle('active', item.months.includes(parseInt(b.dataset.m))));
+        }
+
+        function deleteItem(id) {
+            state.items = state.items.filter(i => i.id !== id);
+            updateData();
+        }
+
+        function spendShopping() {
+            const name = document.getElementById('shopName').value || "Spesa Shopping";
+            const val = parseFloat(document.getElementById('shopSpend').value);
+            if(val) {
+                state.shopWallet -= val;
+                state.savings -= val;
+                state.shopHistory.push({ name, val, date: new Date().toISOString() });
+                document.getElementById('shopName').value = '';
+                document.getElementById('shopSpend').value = '';
+                updateData();
+            }
+        }
+
+        function deleteShopEntry(timestamp) {
+            const entryIdx = state.shopHistory.findIndex(h => h.date === timestamp);
+            if(entryIdx > -1) {
+                const entry = state.shopHistory[entryIdx];
+                state.shopWallet += entry.val;
+                state.savings += entry.val;
+                state.shopHistory.splice(entryIdx, 1);
+                updateData();
+            }
+        }
+
+        function addVariation(mIdx) {
+            const name = prompt("Nome variazione:");
+            const val = parseFloat(prompt("Importo € (es: -50 o 100):"));
+            if(!name || isNaN(val)) return;
+            if(!state.variations[mIdx]) state.variations[mIdx] = [];
+            state.variations[mIdx].push({ name, val, id: Date.now() });
+            updateData(); renderProspect();
+        }
+
+        function deleteVar(mIdx, varId) {
+            state.variations[mIdx] = state.variations[mIdx].filter(v => v.id !== varId);
+            updateData(); renderProspect();
+        }
+
+        function updateData() {
+            state.savings = parseFloat(document.getElementById('baseSavings').value) || 0;
+            state.shopPercent = parseFloat(document.getElementById('configShopPercent').value) || 0;
+            localStorage.setItem('fin_v8', JSON.stringify(state));
+            renderHome(); renderItemsList();
+        }
+
+        function renderHome() {
+            const now = new Date();
+            const currentM = now.getMonth();
+            const currentY = now.getFullYear();
+            let fix = 0;
+            state.items.forEach(i => { if(i.months.includes(currentM) && i.type === 'expense') fix += i.val; });
+            
+            document.getElementById('totalDisplay').innerText = `€ ${state.savings.toFixed(2)}`;
+            document.getElementById('shopWalletDisplay').innerText = `€ ${state.shopWallet.toFixed(2)}`;
+            document.getElementById('fixedDisplay').innerText = `€ ${fix.toFixed(2)}`;
+            document.getElementById('totalDisplay').className = state.hidden ? 'amount hidden' : 'amount';
+
+            const listCont = document.getElementById('currentMonthShoppingList');
+            listCont.innerHTML = '';
+            let monthTotal = 0;
+            const thisMonthHistory = state.shopHistory.filter(h => {
+                const d = new Date(h.date);
+                return d.getMonth() === currentM && d.getFullYear() === currentY;
+            });
+            thisMonthHistory.forEach(h => {
+                monthTotal += h.val;
+                listCont.innerHTML += `
+                    <div class="shopping-list-item">
+                        <span>${h.name}</span>
+                        <div style="display:flex; align-items:center; gap:12px">
+                            <span style="font-weight:700">€ ${h.val.toFixed(2)}</span>
+                            <i data-lucide="x" style="width:14px; color:#d1d1d6" onclick="deleteShopEntry('${h.date}')"></i>
+                        </div>
+                    </div>`;
+            });
+            document.getElementById('monthlyTotalValue').innerText = `€ ${monthTotal.toFixed(2)}`;
+            lucide.createIcons();
+        }
+
+        function renderItemsList() {
+            const cont = document.getElementById('itemsContainer');
+            cont.innerHTML = '<span class="label">Lista Voci</span>';
+            state.items.forEach(i => {
+                cont.innerHTML += `
+                    <div class="glass-card item-list-row" onclick="editItem(${i.id})" style="padding:15px">
+                        <div><div style="font-weight:700">${i.name}</div><div style="font-size:10px; color:var(--gray)">${i.months.length} mesi</div></div>
+                        <div style="display:flex; align-items:center; gap:18px">
+                            <div style="font-weight:800; font-size:16px">${i.type === 'income' ? '+' : '-'} €${i.val.toFixed(2)}</div>
+                            <i data-lucide="trash-2" style="width:18px; color:var(--danger)" onclick="event.stopPropagation(); deleteItem(${i.id})"></i>
+                        </div>
+                    </div>`;
+            });
+            lucide.createIcons();
+        }
+
+        function renderProspect() {
+            const cont = document.getElementById('calendarList');
+            cont.innerHTML = '';
+            let simSavings = state.savings;
+            const now = new Date();
+
+            for(let i = 0; i < 6; i++) {
+                let mIdx = (now.getMonth() + i) % 12;
+                let inc = 0, fix = 0;
+                state.items.forEach(item => { if(item.months.includes(mIdx)) { if(item.type === 'income') inc += item.val; else fix += item.val; } });
+
+                let varTotal = 0; let varHtml = '';
+                if(state.variations[mIdx]) {
+                    state.variations[mIdx].forEach(v => {
+                        varTotal += v.val;
+                        varHtml += `<span class="var-badge">${v.name}: €${v.val} <i data-lucide="x" style="width:10px" onclick="deleteVar(${mIdx}, ${v.id})"></i></span>`;
+                    });
+                }
+
+                const netMonthly = (inc - fix + varTotal);
+                const shopPart = netMonthly > 0 ? (netMonthly * (state.shopPercent / 100)) : 0;
+                const savingsPart = netMonthly - shopPart;
+                if(i > 0) simSavings += savingsPart;
+
+                cont.innerHTML += `
+                    <div class="glass-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+                            <span style="font-weight:800; font-size:20px">${monthsNames[mIdx]}</span>
+                            <span style="font-weight:700; color:var(--gray)">€${simSavings.toFixed(0)}</span>
+                        </div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; font-size:12px; color:var(--gray)">
+                            <div>Entrate: <span style="color:#000; font-weight:700">+€${inc.toFixed(0)}</span></div>
+                            <div>Fisse: <span style="color:#000; font-weight:700">-€${fix.toFixed(0)}</span></div>
+                            <div>Shopping: <span style="color:#000; font-weight:700">€${shopPart.toFixed(0)}</span></div>
+                            <div>Risparmio: <span style="color:#000; font-weight:800">+€${savingsPart.toFixed(0)}</span></div>
+                        </div>
+                        <div style="margin-top:12px">${varHtml}</div>
+                        <button class="btn-outline btn-sm" onclick="addVariation(${mIdx})">Aggiungi Extra</button>
+                    </div>`;
+            }
+            lucide.createIcons();
+        }
+
+        function toggleHidden() {
+            state.hidden = !state.hidden;
+            document.getElementById('eyeIcon').setAttribute('data-lucide', state.hidden ? 'eye-off' : 'eye');
+            updateData(); lucide.createIcons();
+        }
+
+        function exportData() { navigator.clipboard.writeText(btoa(JSON.stringify(state))); alert("Backup copiato!"); }
+        function importData() { const code = prompt("Incolla backup:"); if(code) { state = JSON.parse(atob(code)); updateData(); location.reload(); } }
+
+        document.getElementById('baseSavings').value = state.savings;
+        document.getElementById('configShopPercent').value = state.shopPercent;
+        renderHome(); renderItemsList(); lucide.createIcons();
+    </script>
+</body>
+</html>
