@@ -129,11 +129,9 @@
     </nav>
 
     <script>
-        // Caricamento con protezione bug dati mancanti
         const rawData = localStorage.getItem('fin_v12');
         let s = rawData ? JSON.parse(rawData) : { savings: 0, items: [], shopPercent: 20, shopWallet: 0, shopHistory: [], paid: [], hidden: false, exceptions: {}, lastMonthProcessed: null };
         
-        // Fix per evitare crash se i dati importati sono vecchi
         if (!s.exceptions) s.exceptions = {};
         if (!s.shopHistory) s.shopHistory = [];
         if (!s.paid) s.paid = [];
@@ -172,16 +170,13 @@
             if(c) {
                 try {
                     let imported = JSON.parse(atob(c));
-                    // Normalizzazione dati
                     if (!imported.exceptions) imported.exceptions = {};
                     if (!imported.shopHistory) imported.shopHistory = [];
                     if (!imported.paid) imported.paid = [];
-                    if (imported.shopPercent === undefined) imported.shopPercent = 20;
-                    
                     s = imported;
                     save();
                     location.reload();
-                } catch(e) { alert("Errore: il codice incollato non è valido o è corrotto."); }
+                } catch(e) { alert("Errore backup non valido."); }
             }
         }
 
@@ -191,6 +186,21 @@
             if(!n || isNaN(v)) return;
             s.items.push({ id: Date.now(), name: n, val: v, type: t, months: ms });
             document.getElementById('in').value = ''; document.getElementById('iv').value = ''; upd();
+        }
+
+        // FUNZIONE MODIFICA SPOT (Solo per questo mese)
+        function editValHome(id) {
+            const now = new Date(); 
+            const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
+            const i = s.items.find(x => x.id === id);
+            const currentVal = (s.exceptions[monthKey] && s.exceptions[monthKey][id] !== undefined) ? s.exceptions[monthKey][id] : i.val;
+            
+            const nv = parseFloat(prompt(`Importo speciale per ${i.name} (solo questo mese):`, currentVal));
+            if(!isNaN(nv)) {
+                if(!s.exceptions[monthKey]) s.exceptions[monthKey] = {};
+                s.exceptions[monthKey][id] = nv;
+                save(); ren();
+            }
         }
 
         function ren() {
@@ -219,7 +229,10 @@
                         <div class="check-circle ${p?'checked':''}">${p?'✓':''}</div>
                         <span style="${p?'text-decoration:line-through;color:#86868b':''}">${i.name}</span>
                     </div>
-                    <b>€${valM.toFixed(2)}</b>
+                    <div style="text-align:right; cursor:pointer" onclick="editValHome(${i.id})">
+                        <b>€${valM.toFixed(2)}</b>
+                        <div style="font-size:10px; color:var(--gray)">Modifica</div>
+                    </div>
                 </div>`;
             });
             
