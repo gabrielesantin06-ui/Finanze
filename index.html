@@ -27,15 +27,14 @@
         .amount.blurred span { filter: blur(15px); opacity: 0.3; }
 
         .checklist-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .check-circle { width: 22px; height: 22px; border: 2px solid #d1d1d6; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .check-circle { width: 22px; height: 22px; border: 2px solid #d1d1d6; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
         .check-circle.checked { background: var(--accent); border-color: var(--accent); color: white; }
         
-        /* Cassetti Mesi */
-        .drawer { max-height: 0; opacity: 0; transition: all 0.4s ease; pointer-events: none; }
-        .drawer.open { max-height: 500px; opacity: 1; pointer-events: auto; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.05); }
+        .drawer { max-height: 0; opacity: 0; transition: all 0.4s ease; pointer-events: none; overflow: hidden; }
+        .drawer.open { max-height: 600px; opacity: 1; pointer-events: auto; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.05); }
 
         .tab-bar { position: fixed; bottom: 30px; left: 20px; right: 20px; background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(25px) saturate(200%); -webkit-backdrop-filter: blur(25px) saturate(200%); display: flex; padding: 12px; border-radius: 30px; border: 1px solid var(--glass-border); box-shadow: 0 10px 30px rgba(0,0,0,0.08); z-index: 1000; }
-        .tab-item { color: var(--gray); text-align: center; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; font-weight: 600; }
+        .tab-item { color: var(--gray); text-align: center; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; font-weight: 600; cursor: pointer; }
         .tab-item.active { color: var(--accent); }
         .tab-item i { width: 22px; height: 22px; }
 
@@ -43,36 +42,28 @@
         .view.active { display: block; animation: glassFade 0.4s ease; }
         @keyframes glassFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        button { background: var(--accent); color: #fff; border: none; padding: 16px; border-radius: 16px; font-weight: 700; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; transition: 0.2s; }
-        button:active { transform: scale(0.98); opacity: 0.8; }
+        button { background: var(--accent); color: #fff; border: none; padding: 16px; border-radius: 16px; font-weight: 700; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; cursor: pointer; }
         .btn-outline { background: rgba(0,0,0,0.03); color: var(--text); border: 1px solid #000; margin-top: 10px; }
         
         input, select { font-family: 'Inter', sans-serif; background: rgba(0,0,0,0.04); border: none; padding: 14px; border-radius: 12px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 16px; outline: none; }
         .m-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
-        .m-btn { background: #fff; border: 1px solid #ddd; font-size: 10px; padding: 6px; border-radius: 8px; text-align: center; font-weight: 600; }
+        .m-btn { background: #fff; border: 1px solid #ddd; font-size: 10px; padding: 6px; border-radius: 8px; text-align: center; font-weight: 600; cursor: pointer; }
         .m-btn.active { background: #000; color: #fff; border-color: #000; }
     </style>
 </head>
 <body>
 
     <div id="home" class="view active">
-        <div class="page-header"><span id="headerMonth">Aprile 2026</span><h1>Riepilogo</h1></div>
-        
+        <div class="page-header"><span id="headerMonth">Mese Corrente</span><h1>Riepilogo</h1></div>
         <div class="glass-card" style="text-align: center;">
             <span class="label">Patrimonio Reale</span>
-            <div class="amount" id="amtContainer">
-                <span id="totalDisplay">€ 0.00</span>
-                <div onclick="toggleEye()" style="cursor:pointer"><i data-lucide="eye" id="eyeIcon"></i></div>
-            </div>
+            <div class="amount" id="amtContainer"><span id="totalDisplay">€ 0.00</span><div onclick="toggleEye()"><i data-lucide="eye" id="eyeIcon"></i></div></div>
         </div>
-
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="glass-card"><span class="label">Shopping</span><div id="shopDisplay" style="font-size: 22px; font-weight: 800;">€ 0.00</div></div>
-            <div class="glass-card"><span class="label">Fisse Mese</span><div id="fixDisplay" style="font-size: 22px; font-weight: 800;">€ 0.00</div></div>
+            <div class="glass-card"><span class="label">Wallet Shopping</span><div id="shopDisplay" style="font-size: 22px; font-weight: 800;">€ 0.00</div></div>
+            <div class="glass-card"><span class="label">Uscite Fisse</span><div id="fixDisplay" style="font-size: 22px; font-weight: 800;">€ 0.00</div></div>
         </div>
-
         <div class="glass-card"><span class="label">Checklist Spese</span><div id="checklist"></div></div>
-
         <div class="glass-card">
             <span class="label">Registra Shopping</span>
             <input type="text" id="sn" placeholder="Titolo"><input type="number" id="sv" inputmode="decimal" placeholder="€">
@@ -83,24 +74,22 @@
     <div id="prospect" class="view">
         <div class="page-header"><h1>Previsioni</h1></div>
         <div id="calendarList"></div>
-        
-        <div class="glass-card" style="margin-top: 20px; border: 2px solid #000;">
+        <div class="glass-card" style="border: 2px solid #000;">
             <span class="label">Calcolatore Futuro Remoto</span>
-            <input type="number" id="futureMonths" placeholder="Tra quanti mesi? (es. 12)">
-            <button onclick="calcFuture()">Calcola Prospetto</button>
+            <input type="number" id="futureMonths" placeholder="Tra quanti mesi?">
+            <button onclick="calcFuture()">Calcola</button>
             <div id="futureResult" style="margin-top:15px; font-weight:800; text-align:center; font-size:20px;"></div>
         </div>
     </div>
 
     <div id="setup" class="view">
-        <div class="page-header"><h1>Impostazioni</h1></div>
+        <div class="page-header"><h1>Setup</h1></div>
         <div class="glass-card">
-            <span class="label">Configurazione Base</span>
             <input type="number" id="bs" onchange="upd()" placeholder="Saldo attuale">
             <input type="number" id="sp" onchange="upd()" placeholder="% Shopping">
         </div>
         <div class="glass-card">
-            <span class="label">Nuova Voce Ricorrente</span>
+            <span class="label">Voci Ricorrenti</span>
             <input type="text" id="in" placeholder="Nome"><input type="number" id="iv" placeholder="€">
             <select id="it"><option value="income">Entrata (+)</option><option value="expense">Uscita Fissa (-)</option></select>
             <div class="m-grid" id="mGrid">
@@ -132,21 +121,27 @@
         function upd() { 
             s.savings = parseFloat(document.getElementById('bs').value) || 0; 
             s.shopPercent = parseFloat(document.getElementById('sp').value) || 0; 
-            
-            // Re-calcola wallet shopping al ripristino
-            const now = new Date();
-            let inc = 0, fix = 0;
-            s.items.forEach(i => { if(!i.months || i.months.includes(now.getMonth())) { if(i.type==='income') inc+=i.val; else fix+=i.val; }});
-            const net = inc - fix;
-            if(net > 0) {
-                const totalMonthShop = net * (s.shopPercent / 100);
-                const spent = s.shopHistory.filter(h => new Date(h.d).getMonth() === now.getMonth()).reduce((a, b) => a + b.v, 0);
-                s.shopWallet = totalMonthShop - spent;
-            }
             save(); ren(); 
         }
 
         function save() { localStorage.setItem('fin_v9', JSON.stringify(s)); }
+
+        function importData() {
+            const c = prompt("Incolla il codice di backup qui:");
+            if(c) {
+                try {
+                    const decoded = JSON.parse(atob(c));
+                    s = decoded;
+                    save();
+                    location.reload(); 
+                } catch(e) { alert("Codice non valido!"); }
+            }
+        }
+
+        function exportData() {
+            const str = btoa(JSON.stringify(s));
+            navigator.clipboard.writeText(str).then(() => alert("Backup copiato!"));
+        }
 
         function addItem() {
             const n = document.getElementById('in').value, v = parseFloat(document.getElementById('iv').value), t = document.getElementById('it').value;
@@ -176,31 +171,26 @@
         function ren() {
             const now = new Date(); document.getElementById('headerMonth').innerText = mNames[now.getMonth()] + " " + now.getFullYear();
             let inc = 0, fix = 0; 
-            s.items.forEach(i => { 
-                if(!i.months || i.months.includes(now.getMonth())) {
-                    if(i.type==='income') inc+=i.val; else fix+=i.val;
-                }
-            });
+            s.items.forEach(i => { if(!i.months || i.months.includes(now.getMonth())) { if(i.type==='income') inc+=i.val; else fix+=i.val; }});
             
             document.getElementById('totalDisplay').innerText = `€ ${s.savings.toFixed(2)}`;
             document.getElementById('shopDisplay').innerText = `€ ${s.shopWallet.toFixed(2)}`;
             document.getElementById('fixDisplay').innerText = `€ ${fix.toFixed(2)}`;
             document.getElementById('amtContainer').className = s.hidden ? 'amount blurred' : 'amount';
-            document.getElementById('eyeIcon').setAttribute('data-lucide', s.hidden ? 'eye-off' : 'eye');
-
+            
             const list = document.getElementById('checklist'); list.innerHTML = '';
             s.items.filter(i => i.type === 'expense' && (!i.months || i.months.includes(now.getMonth()))).forEach(i => {
                 const p = s.paid.includes(i.id);
                 list.innerHTML += `<div class="checklist-item">
                     <div style="display:flex;align-items:center;gap:10px" onclick="togP(${i.id})">
-                        <div class="check-circle ${p?'checked':''}">${p?'<i data-lucide="check" style="width:12px"></i>':''}</div>
+                        <div class="check-circle ${p?'checked':''}">${p?'✓':''}</div>
                         <span style="${p?'text-decoration:line-through;color:#86868b':''}">${i.name}</span>
                     </div>
                     <div style="text-align:right" onclick="editVal(${i.id})"><b>€${i.val.toFixed(2)}</b><div style="font-size:10px;color:#86868b">Modifica</div></div>
                 </div>`;
             });
             const iL = document.getElementById('itemsList'); iL.innerHTML = '';
-            s.items.forEach(i => { iL.innerHTML += `<div class="glass-card" style="display:flex;justify-content:space-between"><span>${i.name}</span><span>€${i.val.toFixed(2)} <i data-lucide="trash-2" onclick="delI(${i.id})" style="width:14px;color:red;vertical-align:middle"></i></span></div>`; });
+            s.items.forEach(i => { iL.innerHTML += `<div class="glass-card" style="display:flex;justify-content:space-between"><span>${i.name}</span><span>€${i.val.toFixed(2)} <i data-lucide="trash-2" onclick="delI(${i.id})" style="width:14px;color:red;vertical-align:middle;cursor:pointer"></i></span></div>`; });
             lucide.createIcons();
         }
 
@@ -209,47 +199,26 @@
             let rb = s.savings; const now = new Date();
             for(let i = 0; i < 6; i++) {
                 let mIdx = (now.getMonth() + i) % 12;
-                let inc = 0, fix = 0; 
-                let listHtml = '';
-                s.items.forEach(item => { 
-                    if(!item.months || item.months.includes(mIdx)) {
-                        if(item.type === 'income') inc += item.val; else { fix += item.val; listHtml += `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>${item.name}</span><b>-€${item.val.toFixed(2)}</b></div>`; }
-                    }
-                });
+                let inc = 0, fix = 0; let listHtml = '';
+                s.items.forEach(item => { if(!item.months || item.months.includes(mIdx)) { if(item.type === 'income') inc += item.val; else { fix += item.val; listHtml += `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>${item.name}</span><b>-€${item.val.toFixed(2)}</b></div>`; }}});
                 const net = inc - fix; const shop = net > 0 ? net * (s.shopPercent/100) : 0; const sav = net - shop;
                 if(i > 0) rb += sav;
-                
-                cont.innerHTML += `<div class="glass-card" onclick="document.getElementById('drawer${i}').classList.toggle('open')">
-                    <div style="display:flex;justify-content:space-between;align-items:center">
-                        <b>${mNames[mIdx]}</b><span>€${rb.toFixed(2)}</span>
-                    </div>
-                    <div style="height:6px; background:rgba(0,0,0,0.05); border-radius:10px; margin:12px 0; display:flex; overflow:hidden">
-                        <div style="width:${(fix/inc)*100}%; background:#000"></div>
-                        <div style="width:${(shop/inc)*100}%; background:#86868b"></div>
-                    </div>
-                    <div class="drawer" id="drawer${i}">
-                        <div class="label">Dettaglio Spese Fisse</div>
-                        ${listHtml}
-                        <div style="border-top:1px solid #ddd; margin-top:10px; padding-top:10px; font-size:12px">
-                            <div style="display:flex;justify-content:space-between"><span>Budget Shopping:</span><b>€${shop.toFixed(2)}</b></div>
-                            <div style="display:flex;justify-content:space-between"><span>Risparmio Netto:</span><b>€${sav.toFixed(2)}</b></div>
-                        </div>
-                    </div>
-                </div>`;
+                cont.innerHTML += `<div class="glass-card" onclick="this.querySelector('.drawer').classList.toggle('open')">
+                    <div style="display:flex;justify-content:space-between;align-items:center"><b>${mNames[mIdx]}</b><span>€${rb.toFixed(2)}</span></div>
+                    <div style="height:6px; background:rgba(0,0,0,0.05); border-radius:10px; margin:12px 0; display:flex; overflow:hidden"><div style="width:${(fix/inc)*100}%; background:#000"></div><div style="width:${(shop/inc)*100}%; background:#86868b"></div></div>
+                    <div class="drawer"><div class="label">Dettaglio</div>${listHtml}<div style="border-top:1px solid #ddd; margin-top:10px; padding-top:10px; font-size:12px"><div style="display:flex;justify-content:space-between"><span>Shop:</span><b>€${shop.toFixed(2)}</b></div><div style="display:flex;justify-content:space-between"><span>Risparmio:</span><b>€${sav.toFixed(2)}</b></div></div></div></div>`;
             }
         }
 
         function calcFuture() {
             const mCount = parseInt(document.getElementById('futureMonths').value);
             if(isNaN(mCount)) return;
-            let futBal = s.savings;
-            const now = new Date();
+            let futBal = s.savings; const now = new Date();
             for(let i = 1; i <= mCount; i++) {
                 let mIdx = (now.getMonth() + i) % 12;
                 let inc = 0, fix = 0;
                 s.items.forEach(item => { if(!item.months || item.months.includes(mIdx)) { if(item.type==='income') inc+=item.val; else fix+=item.val; }});
-                const net = inc - fix;
-                futBal += (net > 0 ? net * (1 - s.shopPercent/100) : net);
+                const net = inc - fix; futBal += (net > 0 ? net * (1 - s.shopPercent/100) : net);
             }
             document.getElementById('futureResult').innerText = `Stima: € ${futBal.toFixed(2)}`;
         }
@@ -263,8 +232,6 @@
         function toggleEye() { s.hidden = !s.hidden; save(); ren(); }
         function togP(id) { if(s.paid.includes(id)) s.paid = s.paid.filter(x => x !== id); else s.paid.push(id); save(); ren(); }
         function delI(id) { s.items = s.items.filter(x => x.id !== id); upd(); }
-        function exp() { navigator.clipboard.writeText(btoa(JSON.stringify(s))); alert("Backup copiato!"); }
-        function imp() { const c = prompt("Incolla backup:"); if(c) { s = JSON.parse(atob(c)); upd(); location.reload(); } }
 
         document.getElementById('bs').value = s.savings; document.getElementById('sp').value = s.shopPercent;
         ren(); lucide.createIcons();
