@@ -14,30 +14,31 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        :root { --bg: #ffffff; --glass: rgba(255, 255, 255, 0.75); --glass-border: rgba(255, 255, 255, 0.4); --text: #000; --gray: #86868b; --accent: #000; }
+        :root { --bg: #ffffff; --glass: rgba(255, 255, 255, 0.75); --glass-border: rgba(255, 255, 255, 0.4); --text: #000; --gray: #86868b; --accent: #000; --danger: #ff3b30; }
         body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f5f5f7 0%, #ffffff 100%); background-attachment: fixed; margin: 0; padding: env(safe-area-inset-top) 20px 140px; -webkit-font-smoothing: antialiased; min-height: 100vh; color: var(--text); }
         
         .page-header { padding: 40px 0 10px 10px; }
         .page-header h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.04em; margin: 0; }
-        .page-header span { color: var(--gray); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .page-header span { color: var(--gray); font-size: 13px; font-weight: 700; text-transform: uppercase; }
 
         .glass-card { background: var(--glass); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); border-radius: 24px; padding: 22px; margin-bottom: 16px; border: 1px solid var(--glass-border); box-shadow: 0 4px 24px rgba(0,0,0,0.04); }
         .label { color: var(--gray); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-bottom: 8px; display: block; }
         
         .amount { font-size: 38px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 12px; letter-spacing: -0.05em; }
         .amount.blurred span { filter: blur(15px); opacity: 0.2; }
+        .sub-amount { font-size: 14px; color: var(--gray); font-weight: 600; margin-top: 4px; }
 
         .checklist-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .check-circle { width: 22px; height: 22px; border: 2px solid #d1d1d6; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .check-circle { width: 22px; height: 22px; border: 2px solid #d1d1d6; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .check-circle.checked { background: var(--accent); border-color: var(--accent); color: white; }
         
         .drawer { max-height: 0; opacity: 0; transition: all 0.4s ease; overflow: hidden; }
         .drawer.open { max-height: 600px; opacity: 1; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.05); }
 
-        .tab-bar { position: fixed; bottom: 30px; left: 20px; right: 20px; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(25px) saturate(200%); -webkit-backdrop-filter: blur(25px) saturate(200%); display: flex; padding: 12px; border-radius: 30px; border: 1px solid var(--glass-border); box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 9999; }
+        .tab-bar { position: fixed; bottom: 30px; left: 20px; right: 20px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(25px) saturate(200%); -webkit-backdrop-filter: blur(25px) saturate(200%); display: flex; padding: 12px; border-radius: 30px; border: 1px solid var(--glass-border); box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 9999; }
         .tab-item { color: var(--gray); text-align: center; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; font-weight: 600; cursor: pointer; }
         .tab-item.active { color: var(--accent); }
-        .tab-item svg { width: 22px; height: 22px; margin-bottom: 2px; }
+        .tab-item svg { width: 22px; height: 22px; }
 
         .view { display: none; }
         .view.active { display: block; animation: glassFade 0.4s ease; }
@@ -47,16 +48,13 @@
         .btn-outline { background: rgba(0,0,0,0.03); color: var(--text); border: 1px solid #000; margin-top: 10px; }
         
         input, select { font-family: 'Inter', sans-serif; background: rgba(0,0,0,0.04); border: none; padding: 14px; border-radius: 12px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 16px; outline: none; }
-        
-        /* Slider Style */
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin: 15px 0; }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #e5e5e7; border-radius: 3px; }
-        input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radius: 50%; background: #000; cursor: pointer; -webkit-appearance: none; margin-top: -9px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: #e5e5e7; border-radius: 3px; }
+        input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radius: 50%; background: #000; -webkit-appearance: none; margin-top: -9px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
 
         .m-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
         .m-btn { background: #fff; border: 1px solid #ddd; font-size: 10px; padding: 6px; border-radius: 8px; text-align: center; font-weight: 600; cursor: pointer; }
         .m-btn.active { background: #000; color: #fff; border-color: #000; }
-        
         #chart-wrap { width: 100%; height: 200px; display: flex; justify-content: center; }
     </style>
 </head>
@@ -65,18 +63,19 @@
     <div id="home" class="view active">
         <div class="page-header"><span id="headerMonth">Mese</span><h1>Riepilogo</h1></div>
         <div class="glass-card" style="text-align: center;">
-            <span class="label">Patrimonio Reale</span>
-            <div class="amount" id="amtContainer"><span id="totalDisplay">€ 0.00</span><div onclick="toggleEye()"><i data-lucide="eye" id="eyeIcon"></i></div></div>
+            <span class="label">Disponibilità Attuale</span>
+            <div class="amount" id="amtContainer"><span id="totalDisplay">€ 0.00</span><div onclick="toggleEye()" style="cursor:pointer"><i data-lucide="eye" id="eyeIcon"></i></div></div>
+            <div class="sub-amount" id="futureDisplay">Previsto fine mese: € 0.00</div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <div class="glass-card"><span class="label">Wallet Shopping</span><div id="shopDisplay" style="font-size: 22px; font-weight: 800;">€ 0.00</div></div>
-            <div class="glass-card"><span class="label">Uscite Fisse</span><div id="fixDisplay" style="font-size: 22px; font-weight: 800;">€ 0.00</div></div>
+            <div class="glass-card"><span class="label">Fisse Rimanenti</span><div id="fixDisplay" style="font-size: 22px; font-weight: 800;">€ 0.00</div></div>
         </div>
-        <div class="glass-card"><span class="label">Checklist Spese</span><div id="checklist"></div></div>
+        <div class="glass-card"><span class="label">Checklist Spese Mensili</span><div id="checklist"></div></div>
         <div class="glass-card">
-            <span class="label">Registra Shopping</span>
-            <input type="text" id="sn" placeholder="Titolo spesa"><input type="number" id="sv" inputmode="decimal" placeholder="€">
-            <button onclick="addShop()">Aggiungi Spesa</button>
+            <span class="label">Nuova Spesa Shopping</span>
+            <input type="text" id="sn" placeholder="Titolo"><input type="number" id="sv" inputmode="decimal" placeholder="€">
+            <button onclick="addShop()">Registra Spesa</button>
         </div>
     </div>
 
@@ -92,20 +91,18 @@
     </div>
 
     <div id="setup" class="view">
-        <div class="page-header"><h1>Setup</h1></div>
-        
+        <div class="page-header"><h1>Impostazioni</h1></div>
         <div class="glass-card">
-            <span class="label">Distribuzione Mensile</span>
+            <span class="label">Analisi Distribuzione</span>
             <div id="chart-wrap"><canvas id="pieChart"></canvas></div>
             <div style="margin-top:20px;">
-                <span class="label">Percentuale Shopping: <b id="percVal">20</b>%</span>
+                <span class="label">Quota Shopping: <b id="percVal">20</b>%</span>
                 <input type="range" id="spRange" min="0" max="100" value="20" oninput="updRange(this.value)">
             </div>
         </div>
-
         <div class="glass-card">
             <span class="label">Aggiungi Voce Ricorrente</span>
-            <input type="text" id="in" placeholder="Nome (es. Stipendio, Affitto)"><input type="number" id="iv" placeholder="€">
+            <input type="text" id="in" placeholder="Nome"><input type="number" id="iv" placeholder="€">
             <select id="it"><option value="income">Entrata (+)</option><option value="expense">Uscita Fissa (-)</option></select>
             <div class="m-grid" id="mGrid">
                 <div class="m-btn active" data-m="0">GEN</div><div class="m-btn active" data-m="1">FEB</div><div class="m-btn active" data-m="2">MAR</div><div class="m-btn active" data-m="3">APR</div>
@@ -115,10 +112,9 @@
             <button onclick="addItem()">Salva Voce</button>
         </div>
         <div id="itemsList"></div>
-        
         <div class="glass-card">
-            <span class="label">Patrimonio Iniziale</span>
-            <input type="number" id="bs" onchange="upd()" placeholder="Saldo attuale">
+            <span class="label">Patrimonio Reale Attuale (Liquidi in tasca)</span>
+            <input type="number" id="bs" onchange="upd()" placeholder="Saldo fisico oggi">
             <button class="btn-outline" onclick="exportData()">Copia Backup</button>
             <button class="btn-outline" onclick="importData()" style="margin-top:10px; background:#000; color:#fff">Ripristina Dati</button>
         </div>
@@ -155,8 +151,7 @@
                 try {
                     s = JSON.parse(atob(c));
                     if(!s.paid) s.paid = [];
-                    save();
-                    location.reload();
+                    save(); location.reload();
                 } catch(e) { alert("Errore backup!"); }
             }
         }
@@ -171,29 +166,55 @@
 
         function editVal(id) {
             const i = s.items.find(x => x.id === id);
-            const nv = parseFloat(prompt(`Importo reale per ${i.name}:`, i.val));
+            const nv = parseFloat(prompt(`Importo reale pagato per ${i.name}:`, i.val));
             if(!isNaN(nv)) {
-                const diff = i.val - nv;
-                s.savings += diff;
-                if(diff > 0) s.shopWallet += (diff/2);
+                i.val = nv; // Aggiorna il valore nella lista permanente
                 save(); ren();
+            }
+        }
+
+        function delI(id) {
+            s.items = s.items.filter(i => i.id !== id);
+            save(); ren();
+        }
+
+        function addShop() {
+            const v = parseFloat(document.getElementById('sv').value);
+            if(v) {
+                s.savings -= v; 
+                s.shopHistory.push({ v, d: new Date().toISOString() }); 
+                document.getElementById('sv').value = ''; document.getElementById('sn').value = ''; save(); ren();
             }
         }
 
         function ren() {
             const now = new Date(); document.getElementById('headerMonth').innerText = mNames[now.getMonth()] + " " + now.getFullYear();
-            let inc = 0, fix = 0; 
-            s.items.forEach(i => { if(!i.months || i.months.includes(now.getMonth())) { if(i.type==='income') inc+=i.val; else fix+=i.val; }});
+            let inc = 0, fixTotal = 0, fixUnpaid = 0; 
+            s.items.forEach(i => { 
+                if(!i.months || i.months.includes(now.getMonth())) { 
+                    if(i.type==='income') inc+=i.val; 
+                    else {
+                        fixTotal += i.val;
+                        if(!s.paid.includes(i.id)) fixUnpaid += i.val;
+                    }
+                }
+            });
             
+            // Patrimonio Home: Patrimonio Reale (quello in tasca) + Entrate non ancora incluse - Spese non ancora pagate
+            // Per semplicità: Mostriamo il patrimonio inserito nel setup, che l'utente scalla man mano
             document.getElementById('totalDisplay').innerText = `€ ${s.savings.toFixed(2)}`;
-            document.getElementById('fixDisplay').innerText = `€ ${fix.toFixed(2)}`;
+            document.getElementById('fixDisplay').innerText = `€ ${fixUnpaid.toFixed(2)}`;
             
-            // Calcolo Wallet Shopping
-            const net = inc - fix;
+            // Calcolo Wallet Shopping residuo del mese
+            const net = inc - fixTotal;
             const totalMonthShop = net > 0 ? (net * (s.shopPercent / 100)) : 0;
             const spent = s.shopHistory.filter(h => new Date(h.d).getMonth() === now.getMonth()).reduce((a, b) => a + b.v, 0);
             s.shopWallet = totalMonthShop - spent;
             document.getElementById('shopDisplay').innerText = `€ ${s.shopWallet.toFixed(2)}`;
+            
+            // Proiezione fine mese
+            const future = s.savings - fixUnpaid;
+            document.getElementById('futureDisplay').innerText = `Previsto fine mese: € ${future.toFixed(2)}`;
 
             document.getElementById('amtContainer').className = s.hidden ? 'amount blurred' : 'amount';
             document.getElementById('eyeIcon').setAttribute('data-lucide', s.hidden ? 'eye-off' : 'eye');
@@ -202,7 +223,7 @@
             s.items.filter(i => i.type === 'expense' && (!i.months || i.months.includes(now.getMonth()))).forEach(i => {
                 const p = s.paid.includes(i.id);
                 list.innerHTML += `<div class="checklist-item">
-                    <div style="display:flex;align-items:center;gap:10px" onclick="togP(${i.id})">
+                    <div style="display:flex;align-items:center;gap:10px" onclick="togP(${i.id}, ${i.val})">
                         <div class="check-circle ${p?'checked':''}">${p?'✓':''}</div>
                         <span style="${p?'text-decoration:line-through;color:#86868b':''}">${i.name}</span>
                     </div>
@@ -211,10 +232,29 @@
             });
             
             const iL = document.getElementById('itemsList'); iL.innerHTML = '';
-            s.items.forEach(i => { iL.innerHTML += `<div class="glass-card" style="display:flex;justify-content:space-between;padding:15px;margin-bottom:8px"><span><b>${i.name}</b></span><span>€${i.val.toFixed(2)} <i data-lucide="trash-2" onclick="delI(${i.id})" style="width:14px;color:red;cursor:pointer"></i></span></div>`; });
+            s.items.forEach(i => { 
+                iL.innerHTML += `<div class="glass-card" style="display:flex;justify-content:space-between;align-items:center;padding:15px;margin-bottom:8px">
+                    <span><b>${i.name}</b></span>
+                    <div style="display:flex;align-items:center;gap:15px">
+                        <span>€${i.val.toFixed(2)}</span>
+                        <i data-lucide="trash-2" onclick="delI(${i.id})" style="width:18px;color:red;cursor:pointer"></i>
+                    </div>
+                </div>`; 
+            });
             
-            updateChart(inc, fix);
+            updateChart(inc, fixTotal);
             lucide.createIcons();
+        }
+
+        function togP(id, val) { 
+            if(s.paid.includes(id)) {
+                s.paid = s.paid.filter(x => x !== id);
+                s.savings += val; // Se tolgo la spunta, i soldi tornano nel patrimonio
+            } else {
+                s.paid.push(id);
+                s.savings -= val; // Se metto la spunta, i soldi escono dal patrimonio
+            }
+            save(); ren(); 
         }
 
         function updateChart(inc, fix) {
@@ -222,7 +262,6 @@
             const net = inc - fix > 0 ? inc - fix : 0;
             const shop = net * (s.shopPercent / 100);
             const sav = net - shop;
-            
             const data = {
                 labels: ['Fisse', 'Shop', 'Risparmio'],
                 datasets: [{
@@ -231,17 +270,8 @@
                     borderWidth: 0
                 }]
             };
-
-            if(myChart) {
-                myChart.data = data;
-                myChart.update();
-            } else {
-                myChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: data,
-                    options: { cutout: '70%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
-                });
-            }
+            if(myChart) { myChart.data = data; myChart.update(); }
+            else { myChart = new Chart(ctx, { type: 'doughnut', data: data, options: { cutout: '70%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } } }); }
         }
 
         function renP() {
@@ -278,16 +308,12 @@
             if(id === 'prospect') renP(); ren();
         }
         function toggleEye() { s.hidden = !s.hidden; save(); ren(); }
-        function togP(id) { if(s.paid.includes(id)) s.paid = s.paid.filter(x => x !== id); else s.paid.push(id); save(); ren(); }
-        function delI(id) { s.items = s.items.filter(x => x.id !== id); upd(); }
         function exportData() { navigator.clipboard.writeText(btoa(JSON.stringify(s))).then(() => alert("Backup copiato!")); }
 
         document.getElementById('bs').value = s.savings;
         document.getElementById('spRange').value = s.shopPercent;
         document.getElementById('percVal').innerText = s.shopPercent;
-        
-        document.querySelectorAll('.m-btn').forEach(b => b.onclick = () => { b.classList.toggle('active'); });
-
+        document.querySelectorAll('.m-btn').forEach(b => b.onclick = () => b.classList.toggle('active'));
         window.onload = () => { ren(); lucide.createIcons(); };
     </script>
 </body>
