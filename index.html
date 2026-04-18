@@ -113,7 +113,7 @@
         </div>
         <div id="itemsList"></div>
         <div class="glass-card">
-            <span class="label">Patrimonio Reale Attuale (Liquidi in tasca)</span>
+            <span class="label">Patrimonio Reale Attuale</span>
             <input type="number" id="bs" onchange="upd()" placeholder="Saldo fisico oggi">
             <button class="btn-outline" onclick="exportData()">Copia Backup</button>
             <button class="btn-outline" onclick="importData()" style="margin-top:10px; background:#000; color:#fff">Ripristina Dati</button>
@@ -127,7 +127,10 @@
     </nav>
 
     <script>
-        let s = JSON.parse(localStorage.getItem('fin_v9')) || { savings: 0, items: [], shopPercent: 20, shopWallet: 0, shopHistory: [], paid: [], hidden: false };
+        // S.EXCEPTIONS gestisce le modifiche spot per singolo mese
+        let s = JSON.parse(localStorage.getItem('fin_v9')) || { savings: 0, items: [], shopPercent: 20, shopWallet: 0, shopHistory: [], paid: [], hidden: false, exceptions: {} };
+        if (!s.exceptions) s.exceptions = {}; 
+
         let myChart = null;
         const mNames = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
 
@@ -151,6 +154,7 @@
                 try {
                     s = JSON.parse(atob(c));
                     if(!s.paid) s.paid = [];
+                    if(!s.exceptions) s.exceptions = {};
                     save(); location.reload();
                 } catch(e) { alert("Errore backup!"); }
             }
@@ -164,11 +168,28 @@
             document.getElementById('in').value = ''; document.getElementById('iv').value = ''; upd();
         }
 
-        function editVal(id) {
+        // Modifica dalla Home (Solo mese corrente)
+        function editValHome(id) {
+            const now = new Date();
+            const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
             const i = s.items.find(x => x.id === id);
-            const nv = parseFloat(prompt(`Importo reale pagato per ${i.name}:`, i.val));
+            
+            const currentVal = (s.exceptions[monthKey] && s.exceptions[monthKey][id]) ? s.exceptions[monthKey][id] : i.val;
+            
+            const nv = parseFloat(prompt(`Importo solo per ${mNames[now.getMonth()]}:`, currentVal));
             if(!isNaN(nv)) {
-                i.val = nv; // Aggiorna il valore nella lista permanente
+                if(!s.exceptions[monthKey]) s.exceptions[monthKey] = {};
+                s.exceptions[monthKey][id] = nv;
+                save(); ren();
+            }
+        }
+
+        // Modifica dal Setup (Generale per tutti i mesi)
+        function editValSetup(id) {
+            const i = s.items.find(x => x.id === id);
+            const nv = parseFloat(prompt(`Nuovo importo base per ${i.name}:`, i.val));
+            if(!isNaN(nv)) {
+                i.val = nv;
                 save(); ren();
             }
         }
@@ -187,77 +208,86 @@
             }
         }
 
-    function ren() {
-        const now = new Date(); 
-        document.getElementById('headerMonth').innerText = mNames[now.getMonth()] + " " + now.getFullYear();
-        let inc = 0, fixTotal = 0, fixUnpaid = 0; 
-        
-        s.items.forEach(i => { 
-            if(!i.months || i.months.includes(now.getMonth())) { 
-                if(i.type==='income') inc+=i.val; 
-                else {
-                    fixTotal += i.val;
-                    if(!s.paid.includes(i.id)) fixUnpaid += i.val;
+        function ren() {
+            const now = new Date(); 
+            const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
+            document.getElementById('headerMonth').innerText = mNames[now.getMonth()] + " " + now.getFullYear();
+            
+            let inc = 0, fixTotal = 0, fixUnpaid = 0; 
+            
+            s.items.forEach(i => { 
+                if(!i.months || i.months.includes(now.getMonth())) { 
+                    // Controlla se c'è un'eccezione per questo mese
+                    const effectiveVal = (s.exceptions[monthKey] && s.exceptions[monthKey][i.id] !== undefined) ? s.exceptions[monthKey][i.id] : i.val;
+                    
+                    if(i.type==='income') inc += effectiveVal; 
+                    else {
+                        fixTotal += effectiveVal;
+                        if(!s.paid.includes(i.id)) fixUnpaid += effectiveVal;
+                    }
                 }
-            }
-        });
-        
-        document.getElementById('totalDisplay').innerText = `€ ${s.savings.toFixed(2)}`;
-        document.getElementById('fixDisplay').innerText = `€ ${fixUnpaid.toFixed(2)}`;
-        
-        const net = inc - fixTotal;
-        const totalMonthShop = net > 0 ? (net * (s.shopPercent / 100)) : 0;
-        const spent = s.shopHistory.filter(h => new Date(h.d).getMonth() === now.getMonth()).reduce((a, b) => a + b.v, 0);
-        s.shopWallet = totalMonthShop - spent;
-        document.getElementById('shopDisplay').innerText = `€ ${s.shopWallet.toFixed(2)}`;
-        
-        const future = s.savings - fixUnpaid;
-        document.getElementById('futureDisplay').innerText = `Previsto fine mese: € ${future.toFixed(2)}`;
+            });
+            
+            document.getElementById('totalDisplay').innerText = `€ ${s.savings.toFixed(2)}`;
+            document.getElementById('fixDisplay').innerText = `€ ${fixUnpaid.toFixed(2)}`;
+            
+            const net = inc - fixTotal;
+            const totalMonthShop = net > 0 ? (net * (s.shopPercent / 100)) : 0;
+            const spent = s.shopHistory.filter(h => new Date(h.d).getMonth() === now.getMonth()).reduce((a, b) => a + b.v, 0);
+            s.shopWallet = totalMonthShop - spent;
+            document.getElementById('shopDisplay').innerText = `€ ${s.shopWallet.toFixed(2)}`;
+            
+            const future = s.savings - fixUnpaid;
+            document.getElementById('futureDisplay').innerText = `Previsto fine mese: € ${future.toFixed(2)}`;
 
-        document.getElementById('amtContainer').className = s.hidden ? 'amount blurred' : 'amount';
-        document.getElementById('eyeIcon').setAttribute('data-lucide', s.hidden ? 'eye-off' : 'eye');
+            document.getElementById('amtContainer').className = s.hidden ? 'amount blurred' : 'amount';
+            document.getElementById('eyeIcon').setAttribute('data-lucide', s.hidden ? 'eye-off' : 'eye');
 
-        const list = document.getElementById('checklist'); list.innerHTML = '';
-        s.items.filter(i => i.type === 'expense' && (!i.months || i.months.includes(now.getMonth()))).forEach(i => {
-            const p = s.paid.includes(i.id);
-            list.innerHTML += `<div class="checklist-item">
-                <div style="display:flex;align-items:center;gap:10px" onclick="togP(${i.id}, ${i.val})">
-                    <div class="check-circle ${p?'checked':''}">${p?'✓':''}</div>
-                    <span style="${p?'text-decoration:line-through;color:#86868b':''}">${i.name}</span>
-                </div>
-                <div style="text-align:right" onclick="editVal(${i.id})"><b>€${i.val.toFixed(2)}</b><div style="font-size:10px;color:#86868b">Modifica</div></div>
-            </div>`;
-        });
-        
-        // SEZIONE SETUP AGGIORNATA CON TASTO MODIFICA
-        const iL = document.getElementById('itemsList'); iL.innerHTML = '';
-        s.items.forEach(i => { 
-            iL.innerHTML += `<div class="glass-card" style="display:flex;justify-content:space-between;align-items:center;padding:15px;margin-bottom:8px">
-                <div style="display:flex;flex-direction:column">
-                    <span style="font-size:14px;font-weight:700">${i.name}</span>
-                    <span style="font-size:11px;color:var(--gray)">${i.type === 'income' ? 'Entrata' : 'Uscita fissa'}</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:12px">
-                    <div style="text-align:right;cursor:pointer" onclick="editVal(${i.id})">
-                        <span style="font-weight:700;display:block">€${i.val.toFixed(2)}</span>
-                        <span style="font-size:10px;color:var(--gray)">Modifica</span>
+            const list = document.getElementById('checklist'); list.innerHTML = '';
+            s.items.filter(i => i.type === 'expense' && (!i.months || i.months.includes(now.getMonth()))).forEach(i => {
+                const p = s.paid.includes(i.id);
+                const valMostrato = (s.exceptions[monthKey] && s.exceptions[monthKey][i.id] !== undefined) ? s.exceptions[monthKey][i.id] : i.val;
+                
+                list.innerHTML += `<div class="checklist-item">
+                    <div style="display:flex;align-items:center;gap:10px" onclick="togP(${i.id}, ${valMostrato})">
+                        <div class="check-circle ${p?'checked':''}">${p?'✓':''}</div>
+                        <span style="${p?'text-decoration:line-through;color:#86868b':''}">${i.name}</span>
                     </div>
-                    <i data-lucide="trash-2" onclick="delI(${i.id})" style="width:18px;color:red;cursor:pointer"></i>
-                </div>
-            </div>`; 
-        });
-        
-        updateChart(inc, fixTotal);
-        lucide.createIcons();
-    }
+                    <div style="text-align:right;cursor:pointer" onclick="editValHome(${i.id})">
+                        <b>€${valMostrato.toFixed(2)}</b>
+                        <div style="font-size:10px;color:var(--gray)">Solo ora</div>
+                    </div>
+                </div>`;
+            });
+            
+            const iL = document.getElementById('itemsList'); iL.innerHTML = '';
+            s.items.forEach(i => { 
+                iL.innerHTML += `<div class="glass-card" style="display:flex;justify-content:space-between;align-items:center;padding:15px;margin-bottom:8px">
+                    <div style="display:flex;flex-direction:column">
+                        <span style="font-size:14px;font-weight:700">${i.name}</span>
+                        <span style="font-size:11px;color:var(--gray)">${i.type === 'income' ? 'Entrata' : 'Uscita base'}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:12px">
+                        <div style="text-align:right;cursor:pointer" onclick="editValSetup(${i.id})">
+                            <span style="font-weight:700;display:block">€${i.val.toFixed(2)}</span>
+                            <span style="font-size:10px;color:var(--gray)">Modifica base</span>
+                        </div>
+                        <i data-lucide="trash-2" onclick="delI(${i.id})" style="width:18px;color:red;cursor:pointer"></i>
+                    </div>
+                </div>`; 
+            });
+            
+            updateChart(inc, fixTotal);
+            lucide.createIcons();
+        }
 
         function togP(id, val) { 
             if(s.paid.includes(id)) {
                 s.paid = s.paid.filter(x => x !== id);
-                s.savings += val; // Se tolgo la spunta, i soldi tornano nel patrimonio
+                s.savings += val;
             } else {
                 s.paid.push(id);
-                s.savings -= val; // Se metto la spunta, i soldi escono dal patrimonio
+                s.savings -= val;
             }
             save(); ren(); 
         }
@@ -284,14 +314,13 @@
             let rb = s.savings; const now = new Date();
             for(let i = 0; i < 6; i++) {
                 let mIdx = (now.getMonth() + i) % 12;
-                let inc = 0, fix = 0; let listHtml = '';
-                s.items.forEach(item => { if(!item.months || item.months.includes(mIdx)) { if(item.type === 'income') inc += item.val; else { fix += item.val; listHtml += `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>${item.name}</span><b>-€${item.val.toFixed(2)}</b></div>`; }}});
+                let inc = 0, fix = 0;
+                s.items.forEach(item => { if(!item.months || item.months.includes(mIdx)) { if(item.type === 'income') inc += item.val; else fix += item.val; }});
                 const net = inc - fix; const shop = net > 0 ? net * (s.shopPercent/100) : 0; const sav = net - shop;
                 if(i > 0) rb += sav;
                 cont.innerHTML += `<div class="glass-card" onclick="this.querySelector('.drawer').classList.toggle('open')">
                     <div style="display:flex;justify-content:space-between"><b>${mNames[mIdx]}</b><span>€${rb.toFixed(2)}</span></div>
-                    <div style="height:6px; background:rgba(0,0,0,0.05); border-radius:10px; margin:12px 0; display:flex; overflow:hidden"><div style="width:${(fix/inc)*100}%; background:#000"></div><div style="width:${(shop/inc)*100}%; background:#86868b"></div></div>
-                    <div class="drawer"><div class="label">Dettaglio</div>${listHtml}</div></div>`;
+                    <div class="drawer"><div class="label">Pianificazione Base</div></div></div>`;
             }
         }
 
