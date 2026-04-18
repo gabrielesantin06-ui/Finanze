@@ -187,64 +187,69 @@
             }
         }
 
-        function ren() {
-            const now = new Date(); document.getElementById('headerMonth').innerText = mNames[now.getMonth()] + " " + now.getFullYear();
-            let inc = 0, fixTotal = 0, fixUnpaid = 0; 
-            s.items.forEach(i => { 
-                if(!i.months || i.months.includes(now.getMonth())) { 
-                    if(i.type==='income') inc+=i.val; 
-                    else {
-                        fixTotal += i.val;
-                        if(!s.paid.includes(i.id)) fixUnpaid += i.val;
-                    }
+    function ren() {
+        const now = new Date(); 
+        document.getElementById('headerMonth').innerText = mNames[now.getMonth()] + " " + now.getFullYear();
+        let inc = 0, fixTotal = 0, fixUnpaid = 0; 
+        
+        s.items.forEach(i => { 
+            if(!i.months || i.months.includes(now.getMonth())) { 
+                if(i.type==='income') inc+=i.val; 
+                else {
+                    fixTotal += i.val;
+                    if(!s.paid.includes(i.id)) fixUnpaid += i.val;
                 }
-            });
-            
-            // Patrimonio Home: Patrimonio Reale (quello in tasca) + Entrate non ancora incluse - Spese non ancora pagate
-            // Per semplicità: Mostriamo il patrimonio inserito nel setup, che l'utente scalla man mano
-            document.getElementById('totalDisplay').innerText = `€ ${s.savings.toFixed(2)}`;
-            document.getElementById('fixDisplay').innerText = `€ ${fixUnpaid.toFixed(2)}`;
-            
-            // Calcolo Wallet Shopping residuo del mese
-            const net = inc - fixTotal;
-            const totalMonthShop = net > 0 ? (net * (s.shopPercent / 100)) : 0;
-            const spent = s.shopHistory.filter(h => new Date(h.d).getMonth() === now.getMonth()).reduce((a, b) => a + b.v, 0);
-            s.shopWallet = totalMonthShop - spent;
-            document.getElementById('shopDisplay').innerText = `€ ${s.shopWallet.toFixed(2)}`;
-            
-            // Proiezione fine mese
-            const future = s.savings - fixUnpaid;
-            document.getElementById('futureDisplay').innerText = `Previsto fine mese: € ${future.toFixed(2)}`;
+            }
+        });
+        
+        document.getElementById('totalDisplay').innerText = `€ ${s.savings.toFixed(2)}`;
+        document.getElementById('fixDisplay').innerText = `€ ${fixUnpaid.toFixed(2)}`;
+        
+        const net = inc - fixTotal;
+        const totalMonthShop = net > 0 ? (net * (s.shopPercent / 100)) : 0;
+        const spent = s.shopHistory.filter(h => new Date(h.d).getMonth() === now.getMonth()).reduce((a, b) => a + b.v, 0);
+        s.shopWallet = totalMonthShop - spent;
+        document.getElementById('shopDisplay').innerText = `€ ${s.shopWallet.toFixed(2)}`;
+        
+        const future = s.savings - fixUnpaid;
+        document.getElementById('futureDisplay').innerText = `Previsto fine mese: € ${future.toFixed(2)}`;
 
-            document.getElementById('amtContainer').className = s.hidden ? 'amount blurred' : 'amount';
-            document.getElementById('eyeIcon').setAttribute('data-lucide', s.hidden ? 'eye-off' : 'eye');
+        document.getElementById('amtContainer').className = s.hidden ? 'amount blurred' : 'amount';
+        document.getElementById('eyeIcon').setAttribute('data-lucide', s.hidden ? 'eye-off' : 'eye');
 
-            const list = document.getElementById('checklist'); list.innerHTML = '';
-            s.items.filter(i => i.type === 'expense' && (!i.months || i.months.includes(now.getMonth()))).forEach(i => {
-                const p = s.paid.includes(i.id);
-                list.innerHTML += `<div class="checklist-item">
-                    <div style="display:flex;align-items:center;gap:10px" onclick="togP(${i.id}, ${i.val})">
-                        <div class="check-circle ${p?'checked':''}">${p?'✓':''}</div>
-                        <span style="${p?'text-decoration:line-through;color:#86868b':''}">${i.name}</span>
+        const list = document.getElementById('checklist'); list.innerHTML = '';
+        s.items.filter(i => i.type === 'expense' && (!i.months || i.months.includes(now.getMonth()))).forEach(i => {
+            const p = s.paid.includes(i.id);
+            list.innerHTML += `<div class="checklist-item">
+                <div style="display:flex;align-items:center;gap:10px" onclick="togP(${i.id}, ${i.val})">
+                    <div class="check-circle ${p?'checked':''}">${p?'✓':''}</div>
+                    <span style="${p?'text-decoration:line-through;color:#86868b':''}">${i.name}</span>
+                </div>
+                <div style="text-align:right" onclick="editVal(${i.id})"><b>€${i.val.toFixed(2)}</b><div style="font-size:10px;color:#86868b">Modifica</div></div>
+            </div>`;
+        });
+        
+        // SEZIONE SETUP AGGIORNATA CON TASTO MODIFICA
+        const iL = document.getElementById('itemsList'); iL.innerHTML = '';
+        s.items.forEach(i => { 
+            iL.innerHTML += `<div class="glass-card" style="display:flex;justify-content:space-between;align-items:center;padding:15px;margin-bottom:8px">
+                <div style="display:flex;flex-direction:column">
+                    <span style="font-size:14px;font-weight:700">${i.name}</span>
+                    <span style="font-size:11px;color:var(--gray)">${i.type === 'income' ? 'Entrata' : 'Uscita fissa'}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px">
+                    <div style="text-align:right;cursor:pointer" onclick="editVal(${i.id})">
+                        <span style="font-weight:700;display:block">€${i.val.toFixed(2)}</span>
+                        <span style="font-size:10px;color:var(--gray)">Modifica</span>
                     </div>
-                    <div style="text-align:right" onclick="editVal(${i.id})"><b>€${i.val.toFixed(2)}</b><div style="font-size:10px;color:#86868b">Modifica</div></div>
-                </div>`;
-            });
-            
-            const iL = document.getElementById('itemsList'); iL.innerHTML = '';
-            s.items.forEach(i => { 
-                iL.innerHTML += `<div class="glass-card" style="display:flex;justify-content:space-between;align-items:center;padding:15px;margin-bottom:8px">
-                    <span><b>${i.name}</b></span>
-                    <div style="display:flex;align-items:center;gap:15px">
-                        <span>€${i.val.toFixed(2)}</span>
-                        <i data-lucide="trash-2" onclick="delI(${i.id})" style="width:18px;color:red;cursor:pointer"></i>
-                    </div>
-                </div>`; 
-            });
-            
-            updateChart(inc, fixTotal);
-            lucide.createIcons();
-        }
+                    <i data-lucide="trash-2" onclick="delI(${i.id})" style="width:18px;color:red;cursor:pointer"></i>
+                </div>
+            </div>`; 
+        });
+        
+        updateChart(inc, fixTotal);
+        lucide.createIcons();
+    }
 
         function togP(id, val) { 
             if(s.paid.includes(id)) {
