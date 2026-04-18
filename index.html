@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Finance OS Pro - Double Pocket</title>
+    <title>Finance OS Pro</title>
     
     <link rel="apple-touch-icon" href="https://github.com/gabrielesantin06-ui/Finanze/blob/main/icona%20finanze.jpg?raw=true">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,299 +14,174 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        :root { --bg: #ffffff; --glass: rgba(255, 255, 255, 0.75); --glass-border: rgba(255, 255, 255, 0.4); --text: #000; --gray: #86868b; --accent: #000; --danger: #ff3b30; }
-        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f5f5f7 0%, #ffffff 100%); background-attachment: fixed; margin: 0; padding: env(safe-area-inset-top) 20px 140px; -webkit-font-smoothing: antialiased; min-height: 100vh; color: var(--text); }
+        :root { --bg: #ffffff; --glass: rgba(255, 255, 255, 0.75); --glass-border: rgba(255, 255, 255, 0.4); --text: #000; --gray: #86868b; --accent: #000; --danger: #ff3b30; --success: #34c759; }
+        body { font-family: 'Inter', sans-serif; background: #f5f5f7; margin: 0; padding: env(safe-area-inset-top) 20px 140px; color: var(--text); -webkit-font-smoothing: antialiased; }
         
         .page-header { padding: 40px 0 10px 10px; }
-        .page-header h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.04em; margin: 0; }
+        .page-header h1 { font-size: 32px; font-weight: 800; margin: 0; letter-spacing: -0.04em; }
         .page-header span { color: var(--gray); font-size: 13px; font-weight: 700; text-transform: uppercase; }
 
-        .glass-card { background: var(--glass); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); border-radius: 24px; padding: 22px; margin-bottom: 16px; border: 1px solid var(--glass-border); box-shadow: 0 4px 24px rgba(0,0,0,0.04); }
+        .glass-card { background: var(--glass); backdrop-filter: blur(20px); border-radius: 24px; padding: 22px; margin-bottom: 16px; border: 1px solid var(--glass-border); box-shadow: 0 4px 24px rgba(0,0,0,0.04); }
         .label { color: var(--gray); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-bottom: 8px; display: block; }
         
         .amount { font-size: 38px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 12px; letter-spacing: -0.05em; }
         .amount.blurred span { filter: blur(15px); opacity: 0.2; }
-        .sub-amount { font-size: 14px; color: var(--gray); font-weight: 600; margin-top: 4px; }
 
         .checklist-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
         .check-circle { width: 22px; height: 22px; border: 2px solid #d1d1d6; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .check-circle.checked { background: var(--accent); border-color: var(--accent); color: white; }
         
-        .drawer { max-height: 0; opacity: 0; transition: all 0.4s ease; overflow: hidden; }
-        .drawer.open { max-height: 600px; opacity: 1; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.05); }
-
-        .tab-bar { position: fixed; bottom: 30px; left: 20px; right: 20px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(25px) saturate(200%); -webkit-backdrop-filter: blur(25px) saturate(200%); display: flex; padding: 12px; border-radius: 30px; border: 1px solid var(--glass-border); box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 9999; }
+        .tab-bar { position: fixed; bottom: 30px; left: 20px; right: 20px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(25px); display: flex; padding: 12px; border-radius: 30px; border: 1px solid var(--glass-border); box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 9999; }
         .tab-item { color: var(--gray); text-align: center; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; font-weight: 600; cursor: pointer; }
         .tab-item.active { color: var(--accent); }
         .tab-item svg { width: 22px; height: 22px; }
 
         .view { display: none; }
-        .view.active { display: block; animation: glassFade 0.4s ease; }
-        @keyframes glassFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .view.active { display: block; }
         
-        button { background: var(--accent); color: #fff; border: none; padding: 16px; border-radius: 16px; font-weight: 700; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; cursor: pointer; }
+        button { background: var(--accent); color: #fff; border: none; padding: 16px; border-radius: 16px; font-weight: 700; width: 100%; font-size: 15px; cursor: pointer; }
         .btn-outline { background: rgba(0,0,0,0.03); color: var(--text); border: 1px solid #000; margin-top: 10px; }
         
         input, select { font-family: 'Inter', sans-serif; background: rgba(0,0,0,0.04); border: none; padding: 14px; border-radius: 12px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 16px; outline: none; }
-        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin: 15px 0; }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: #e5e5e7; border-radius: 3px; }
-        input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radius: 50%; background: #000; -webkit-appearance: none; margin-top: -9px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-
-        .m-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
-        .m-btn { background: #fff; border: 1px solid #ddd; font-size: 10px; padding: 6px; border-radius: 8px; text-align: center; font-weight: 600; cursor: pointer; }
-        .m-btn.active { background: #000; color: #fff; border-color: #000; }
-        #chart-wrap { width: 100%; height: 200px; display: flex; justify-content: center; }
         .shop-list-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.03); }
+        #chart-wrap { width: 100%; height: 180px; display: flex; justify-content: center; }
     </style>
 </head>
 <body>
 
     <div id="home" class="view active">
-        <div class="page-header"><span id="headerMonth">Mese</span><h1>Patrimonio Netto</h1></div>
+        <div class="page-header"><span id="headerMonth">Mese</span><h1>Patrimonio</h1></div>
         <div class="glass-card" style="text-align: center;">
-            <span class="label">Disponibilità Reale (No Shopping)</span>
-            <div class="amount" id="amtContainer"><span id="totalDisplay">€ 0.00</span><div onclick="toggleEye()" style="cursor:pointer"><i data-lucide="eye" id="eyeIcon"></i></div></div>
-            <div class="sub-amount" id="futureDisplay">Previsto fine mese: € 0.00</div>
+            <span class="label">Disponibilità Reale</span>
+            <div class="amount" id="amtContainer"><span id="totalDisplay">€ 0.00</span><div onclick="toggleEye()"><i data-lucide="eye"></i></div></div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="glass-card" style="background: #000; color: #fff;"><span class="label" style="color: #86868b;">Wallet Shopping</span><div id="shopDisplay" style="font-size: 22px; font-weight: 800; color: #fff;">€ 0.00</div></div>
+            <div class="glass-card" style="background: #000; color: #fff;"><span class="label" style="color: #86868b;">Wallet Shopping</span><div id="shopDisplay" style="font-size: 22px; font-weight: 800;">€ 0.00</div></div>
             <div class="glass-card"><span class="label">Fisse Rimanenti</span><div id="fixDisplay" style="font-size: 22px; font-weight: 800;">€ 0.00</div></div>
         </div>
-        <div class="glass-card"><span class="label">Checklist Spese Mensili</span><div id="checklist"></div></div>
+        <div class="glass-card"><span class="label">Entrate e Uscite del Mese</span><div id="checklist"></div></div>
         <div class="glass-card">
             <span class="label">Nuova Spesa Shopping</span>
-            <input type="text" id="sn" placeholder="Cosa hai comprato?"><input type="number" id="sv" inputmode="decimal" placeholder="€">
-            <button onclick="addShop()">Usa Wallet Shopping</button>
+            <input type="text" id="sn" placeholder="Titolo spesa"><input type="number" id="sv" inputmode="decimal" placeholder="€">
+            <button onclick="addShop()">Usa Wallet</button>
             <div id="recentShopList" style="margin-top: 20px;"></div>
         </div>
     </div>
 
-    <div id="prospect" class="view">
-        <div class="page-header"><h1>Previsioni</h1></div>
-        <div id="calendarList"></div>
-        <div class="glass-card" style="border: 2px solid #000;">
-            <span class="label">Calcolatore Futuro Remoto</span>
-            <input type="number" id="futureMonths" placeholder="Tra quanti mesi?">
-            <button onclick="calcFuture()">Calcola</button>
-            <div id="futureResult" style="margin-top:15px; font-weight:800; text-align:center; font-size:20px;"></div>
-        </div>
-    </div>
-
     <div id="setup" class="view">
-        <div class="page-header"><h1>Impostazioni</h1></div>
+        <div class="page-header"><h1>Setup</h1></div>
         <div class="glass-card">
-            <span class="label">Analisi Distribuzione</span>
+            <span class="label">Distribuzione Mensile</span>
             <div id="chart-wrap"><canvas id="pieChart"></canvas></div>
-            <div style="margin-top:20px;">
-                <span class="label">Quota Shopping Mensile: <b id="percVal">20</b>%</span>
-                <input type="range" id="spRange" min="0" max="100" value="20" oninput="updRange(this.value)">
-                <p style="font-size: 10px; color: var(--gray); margin-top: 10px;">Questa percentuale viene tolta dal patrimonio il 1° di ogni mese e aggiunta al Wallet Shopping.</p>
-            </div>
+            <input type="range" id="spRange" min="0" max="100" value="20" oninput="updRange(this.value)" style="width:100%; margin-top:20px;">
+            <div style="text-align:center; font-weight:700; margin-top:5px;">Quota Shopping: <span id="percVal">20</span>%</div>
         </div>
         <div class="glass-card">
             <span class="label">Aggiungi Voce Ricorrente</span>
             <input type="text" id="in" placeholder="Nome"><input type="number" id="iv" placeholder="€">
             <select id="it"><option value="income">Entrata (+)</option><option value="expense">Uscita Fissa (-)</option></select>
-            <div class="m-grid" id="mGrid">
-                <div class="m-btn active" data-m="0">GEN</div><div class="m-btn active" data-m="1">FEB</div><div class="m-btn active" data-m="2">MAR</div><div class="m-btn active" data-m="3">APR</div>
-                <div class="m-btn active" data-m="4">MAG</div><div class="m-btn active" data-m="5">GIU</div><div class="m-btn active" data-m="6">LUG</div><div class="m-btn active" data-m="7">AGO</div>
-                <div class="m-btn active" data-m="8">SET</div><div class="m-btn active" data-m="9">OTT</div><div class="m-btn active" data-m="10">NOV</div><div class="m-btn active" data-m="11">DIC</div>
-            </div>
-            <button onclick="addItem()">Salva Voce</button>
+            <button onclick="addItem()">Aggiungi</button>
         </div>
         <div id="itemsList"></div>
         <div class="glass-card">
-            <span class="label">Patrimonio Reale Attuale (Escluso Wallet)</span>
-            <input type="number" id="bs" onchange="upd()" placeholder="Saldo fisico oggi">
-            <span class="label" style="margin-top: 10px;">Wallet Shopping Attuale</span>
-            <input type="number" id="ws" onchange="updWS()" placeholder="€ nel wallet">
+            <span class="label">Gestione Fondi</span>
+            <input type="number" id="bs" onchange="upd()" placeholder="Patrimonio Reale">
+            <input type="number" id="ws" onchange="updWS()" placeholder="Wallet Shopping">
             <button class="btn-outline" onclick="exportData()">Copia Backup</button>
-            <button class="btn-outline" onclick="importData()" style="margin-top:10px; background:#000; color:#fff">Ripristina Dati</button>
+            <button class="btn-outline" onclick="importData()" style="margin-top:10px; background:#000; color:#fff">Ripristina Backup</button>
         </div>
     </div>
 
     <nav class="tab-bar">
         <div class="tab-item active" onclick="swi('home', this)"><i data-lucide="home"></i>Casa</div>
-        <div class="tab-item" onclick="swi('prospect', this)"><i data-lucide="calendar"></i>Mesi</div>
         <div class="tab-item" onclick="swi('setup', this)"><i data-lucide="settings"></i>Setup</div>
     </nav>
 
     <script>
-        let s = JSON.parse(localStorage.getItem('fin_v10')) || { 
-            savings: 0, 
-            shopWallet: 0,
-            items: [], 
-            shopPercent: 20, 
-            shopHistory: [], 
-            paid: [], 
-            hidden: false, 
-            exceptions: {},
-            lastProcessedMonth: null 
-        };
-
+        let s = JSON.parse(localStorage.getItem('fin_v11')) || { savings: 0, shopWallet: 0, items: [], shopPercent: 20, shopHistory: [], paid: [], hidden: false };
         let myChart = null;
         const mNames = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
 
-        function save() { localStorage.setItem('fin_v10', JSON.stringify(s)); }
+        function save() { localStorage.setItem('fin_v11', JSON.stringify(s)); }
 
-        // Gestione Cambio Mese e Prelievo Automatico
-        function checkMonthChange() {
-            const now = new Date();
-            const currentMonthKey = `${now.getFullYear()}-${now.getMonth()}`;
-            
-            if (s.lastProcessedMonth !== currentMonthKey) {
-                // È iniziato un nuovo mese! Calcoliamo la quota shopping
-                let inc = 0, fix = 0;
-                s.items.forEach(i => {
-                    if(!i.months || i.months.includes(now.getMonth())) {
-                        if(i.type === 'income') inc += i.val;
-                        else fix += i.val;
-                    }
-                });
-                
-                const net = inc - fix;
-                if (net > 0) {
-                    const quota = net * (s.shopPercent / 100);
-                    s.savings -= quota;     // Togliamo dal patrimonio
-                    s.shopWallet += quota;  // Aggiungiamo al wallet (cumulativo)
-                }
-                
-                s.lastProcessedMonth = currentMonthKey;
-                s.paid = []; // Resettiamo la checklist per il nuovo mese
-                save();
-            }
-        }
-
-        function upd() { 
-            s.savings = parseFloat(document.getElementById('bs').value) || 0; 
-            save(); ren(); 
-        }
-
-        function updWS() {
-            s.shopWallet = parseFloat(document.getElementById('ws').value) || 0;
-            save(); ren();
-        }
-
-        function updRange(v) {
-            document.getElementById('percVal').innerText = v;
-            s.shopPercent = parseFloat(v);
-            save(); ren();
-        }
-
-        function importData() {
-            const c = prompt("Incolla backup:");
-            if(c) {
-                try {
-                    s = JSON.parse(atob(c));
-                    save(); location.reload();
-                } catch(e) { alert("Errore backup!"); }
-            }
-        }
+        function upd() { s.savings = parseFloat(document.getElementById('bs').value) || 0; save(); ren(); }
+        function updWS() { s.shopWallet = parseFloat(document.getElementById('ws').value) || 0; save(); ren(); }
+        function updRange(v) { s.shopPercent = parseFloat(v); document.getElementById('percVal').innerText = v; save(); ren(); }
 
         function addItem() {
             const n = document.getElementById('in').value, v = parseFloat(document.getElementById('iv').value), t = document.getElementById('it').value;
-            const ms = Array.from(document.querySelectorAll('#mGrid .m-btn.active')).map(b => parseInt(b.dataset.m));
             if(!n || isNaN(v)) return;
-            s.items.push({ id: Date.now(), name: n, val: v, type: t, months: ms });
+            s.items.push({ id: Date.now(), name: n, val: v, type: t });
             document.getElementById('in').value = ''; document.getElementById('iv').value = ''; save(); ren();
         }
 
+        function togP(id, val, type) {
+            if(s.paid.includes(id)) {
+                s.paid = s.paid.filter(x => x !== id);
+                type === 'income' ? s.savings -= val : s.savings += val;
+            } else {
+                s.paid.push(id);
+                type === 'income' ? s.savings += val : s.savings -= val;
+            }
+            save(); ren();
+        }
+
         function addShop() {
-            const n = document.getElementById('sn').value || "Spesa Shopping";
             const v = parseFloat(document.getElementById('sv').value);
             if(v && s.shopWallet >= v) {
-                s.shopWallet -= v; // SCALA DAL WALLET, NON DAL PATRIMONIO
-                s.shopHistory.push({ id: Date.now(), n, v, d: new Date().toISOString() }); 
+                s.shopWallet -= v;
+                s.shopHistory.push({ id: Date.now(), n: document.getElementById('sn').value || "Shopping", v, d: new Date().toISOString() });
                 document.getElementById('sv').value = ''; document.getElementById('sn').value = ''; save(); ren();
-            } else if (v > s.shopWallet) {
-                alert("Budget shopping insufficiente!");
-            }
+            } else { alert("Saldo Wallet insufficiente!"); }
         }
 
         function delShop(id) {
-            const shopItem = s.shopHistory.find(h => h.id === id);
-            if(shopItem) {
-                s.shopWallet += shopItem.v; // RESTITUISCE AL WALLET
-                s.shopHistory = s.shopHistory.filter(h => h.id !== id);
-                save(); ren();
-            }
-        }
-
-        function editValHome(id) {
-            const now = new Date();
-            const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
-            const i = s.items.find(x => x.id === id);
-            const nv = parseFloat(prompt(`Importo solo per questo mese:`, i.val));
-            if(!isNaN(nv)) {
-                if(!s.exceptions[monthKey]) s.exceptions[monthKey] = {};
-                s.exceptions[monthKey][id] = nv;
-                save(); ren();
-            }
+            const i = s.shopHistory.find(h => h.id === id);
+            if(i) { s.shopWallet += i.v; s.shopHistory = s.shopHistory.filter(h => h.id !== id); save(); ren(); }
         }
 
         function ren() {
-            checkMonthChange();
-            const now = new Date(); 
-            const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
-            document.getElementById('headerMonth').innerText = mNames[now.getMonth()] + " " + now.getFullYear();
-            
-            let inc = 0, fixTotal = 0, fixUnpaid = 0; 
-            s.items.forEach(i => { 
-                if(!i.months || i.months.includes(now.getMonth())) { 
-                    const valM = (s.exceptions[monthKey] && s.exceptions[monthKey][i.id] !== undefined) ? s.exceptions[monthKey][i.id] : i.val;
-                    if(i.type==='income') inc += valM; 
-                    else { fixTotal += valM; if(!s.paid.includes(i.id)) fixUnpaid += valM; }
-                }
-            });
-            
+            const now = new Date();
+            document.getElementById('headerMonth').innerText = mNames[now.getMonth()];
             document.getElementById('totalDisplay').innerText = `€ ${s.savings.toFixed(2)}`;
             document.getElementById('shopDisplay').innerText = `€ ${s.shopWallet.toFixed(2)}`;
-            document.getElementById('fixDisplay').innerText = `€ ${fixUnpaid.toFixed(2)}`;
-            document.getElementById('futureDisplay').innerText = `Fine mese (Netto): € ${(s.savings - fixUnpaid).toFixed(2)}`;
-
+            
+            let fixUnpaid = 0, incTotal = 0, fixTotal = 0;
             const list = document.getElementById('checklist'); list.innerHTML = '';
-            s.items.filter(i => i.type === 'expense' && (!i.months || i.months.includes(now.getMonth()))).forEach(i => {
+            
+            s.items.forEach(i => {
                 const p = s.paid.includes(i.id);
-                const valM = (s.exceptions[monthKey] && s.exceptions[monthKey][i.id] !== undefined) ? s.exceptions[monthKey][i.id] : i.val;
+                if(i.type === 'expense') {
+                    fixTotal += i.val;
+                    if(!p) fixUnpaid += i.val;
+                } else { incTotal += i.val; }
+                
                 list.innerHTML += `<div class="checklist-item">
-                    <div style="display:flex;align-items:center;gap:10px" onclick="togP(${i.id}, ${valM})">
+                    <div style="display:flex;align-items:center;gap:10px" onclick="togP(${i.id}, ${i.val}, '${i.type}')">
                         <div class="check-circle ${p?'checked':''}">${p?'✓':''}</div>
                         <span style="${p?'text-decoration:line-through;color:#86868b':''}">${i.name}</span>
                     </div>
-                    <div style="text-align:right" onclick="editValHome(${i.id})"><b>€${valM.toFixed(2)}</b></div>
+                    <b>€${i.val.toFixed(2)}</b>
                 </div>`;
             });
-            
-            const rsl = document.getElementById('recentShopList');
-            const currentMonthShop = s.shopHistory.filter(h => new Date(h.d).getMonth() === now.getMonth());
-            if(currentMonthShop.length > 0) {
-                rsl.innerHTML = `<span class="label">Shopping del mese</span>`;
-                currentMonthShop.slice().reverse().forEach(h => {
-                    rsl.innerHTML += `<div class="shop-list-item">
-                        <div style="display:flex;align-items:center;gap:10px"><i data-lucide="x-circle" style="width:16px;color:var(--danger);cursor:pointer" onclick="delShop(${h.id})"></i><span>${h.n}</span></div>
-                        <b>-€${h.v.toFixed(2)}</b>
-                    </div>`;
-                });
-            } else { rsl.innerHTML = ''; }
+            document.getElementById('fixDisplay').innerText = `€ ${fixUnpaid.toFixed(2)}`;
+
+            const rsl = document.getElementById('recentShopList'); rsl.innerHTML = '';
+            s.shopHistory.slice(-5).reverse().forEach(h => {
+                rsl.innerHTML += `<div class="shop-list-item"><span>${h.n}</span><span>-€${h.v.toFixed(2)} <i data-lucide="x" onclick="delShop(${h.id})" style="width:14px;color:red;vertical-align:middle;cursor:pointer"></i></span></div>`;
+            });
 
             const iL = document.getElementById('itemsList'); iL.innerHTML = '';
-            s.items.forEach(i => { 
-                iL.innerHTML += `<div class="glass-card" style="display:flex;justify-content:space-between;align-items:center;padding:15px;margin-bottom:8px">
-                    <div><span style="font-size:14px;font-weight:700">${i.name}</span><br><span style="font-size:11px;color:var(--gray)">${i.type === 'income' ? 'Entrata' : 'Uscita base'}</span></div>
-                    <div style="display:flex;align-items:center;gap:12px"><b>€${i.val.toFixed(2)}</b><i data-lucide="trash-2" onclick="delI(${i.id})" style="width:18px;color:red;cursor:pointer"></i></div>
-                </div>`; 
+            s.items.forEach(i => {
+                iL.innerHTML += `<div class="glass-card" style="display:flex;justify-content:space-between"><span>${i.name}</span><b>€${i.val} <i data-lucide="trash-2" onclick="s.items=s.items.filter(x=>x.id!==${i.id});save();ren();" style="width:14px;color:red;cursor:pointer"></i></b></div>`;
             });
-            
-            updateChart(inc, fixTotal);
-            lucide.createIcons();
+
             document.getElementById('bs').value = s.savings;
             document.getElementById('ws').value = s.shopWallet;
-        }
-
-        function togP(id, val) { 
-            if(s.paid.includes(id)) { s.paid = s.paid.filter(x => x !== id); s.savings += val; } 
-            else { s.paid.push(id); s.savings -= val; }
-            save(); ren(); 
+            document.getElementById('spRange').value = s.shopPercent;
+            document.getElementById('amtContainer').className = s.hidden ? 'amount blurred' : 'amount';
+            updateChart(incTotal, fixTotal);
+            lucide.createIcons();
         }
 
         function updateChart(inc, fix) {
@@ -314,22 +189,21 @@
             const net = inc - fix > 0 ? inc - fix : 0;
             const shop = net * (s.shopPercent / 100);
             const sav = net - shop;
-            const data = { labels: ['Fisse', 'Shop (Quota)', 'Risparmio'], datasets: [{ data: [fix, shop, sav], backgroundColor: ['#000000', '#86868b', '#e5e5e7'], borderWidth: 0 }] };
-            if(myChart) { myChart.data = data; myChart.update(); }
-            else { myChart = new Chart(ctx, { type: 'doughnut', data: data, options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } } }); }
+            if(myChart) myChart.destroy();
+            myChart = new Chart(ctx, { type: 'doughnut', data: { labels: ['Fisse', 'Shop', 'Risparmio'], datasets: [{ data: [fix, shop, sav], backgroundColor: ['#000', '#86868b', '#e5e5e7'], borderWidth: 0 }] }, options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } } });
         }
 
-        function swi(id, el) { 
+        function swi(id, el) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
             document.getElementById(id).classList.add('active'); el.classList.add('active');
-            ren();
         }
 
         function toggleEye() { s.hidden = !s.hidden; save(); ren(); }
         function exportData() { navigator.clipboard.writeText(btoa(JSON.stringify(s))).then(() => alert("Backup copiato!")); }
+        function importData() { const b = prompt("Incolla backup:"); if(b) { s = JSON.parse(atob(b)); save(); location.reload(); } }
 
-        window.onload = () => { ren(); lucide.createIcons(); };
+        window.onload = () => ren();
     </script>
 </body>
 </html>
