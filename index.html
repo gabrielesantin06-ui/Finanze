@@ -130,9 +130,10 @@
 
     <script>
         const rawData = localStorage.getItem('fin_v12');
-        let s = rawData ? JSON.parse(rawData) : { savings: 0, items: [], shopPercent: 20, shopWallet: 0, shopHistory: [], paid: [], hidden: false, exceptions: {}, lastMonthProcessed: null };
+        let s = rawData ? JSON.parse(rawData) : { savings: 0, items: [], shopPercent: 20, shopWallet: 0, shopHistory: [], paid: [], hidden: false, exceptions: {}, partialPayments: {}, lastMonthProcessed: null };
         
         if (!s.exceptions) s.exceptions = {};
+        if (!s.partialPayments) s.partialPayments = {};
         if (!s.shopHistory) s.shopHistory = [];
         if (!s.paid) s.paid = [];
 
@@ -155,6 +156,7 @@
                 }
                 s.lastMonthProcessed = currentM;
                 s.paid = [];
+                s.partialPayments = {}; // Reset pagamenti parziali al cambio mese
                 save();
             } else if (s.lastMonthProcessed === null) {
                 s.lastMonthProcessed = currentM;
@@ -171,6 +173,7 @@
                 try {
                     let imported = JSON.parse(atob(c));
                     if (!imported.exceptions) imported.exceptions = {};
+                    if (!imported.partialPayments) imported.partialPayments = {};
                     if (!imported.shopHistory) imported.shopHistory = [];
                     if (!imported.paid) imported.paid = [];
                     s = imported;
@@ -188,17 +191,33 @@
             document.getElementById('in').value = ''; document.getElementById('iv').value = ''; upd();
         }
 
-        function editValHome(id) {
+        function managePayment(id) {
             const now = new Date(); 
             const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
             const i = s.items.find(x => x.id === id);
-            const currentVal = (s.exceptions[monthKey] && s.exceptions[monthKey][id] !== undefined) ? s.exceptions[monthKey][id] : i.val;
+            const baseVal = (s.exceptions[monthKey] && s.exceptions[monthKey][id] !== undefined) ? s.exceptions[monthKey][id] : i.val;
+            const alreadyPaid = s.partialPayments[id] || 0;
+            const remaining = baseVal - alreadyPaid;
+
+            const mode = confirm(`Vuoi pagare un ACCONTO (Premi OK) o cambiare l'IMPORTO TOTALE per questo mese (Premi ANNULLA)?`);
             
-            const nv = parseFloat(prompt(`Importo speciale per ${i.name} (solo questo mese):`, currentVal));
-            if(!isNaN(nv)) {
-                if(!s.exceptions[monthKey]) s.exceptions[monthKey] = {};
-                s.exceptions[monthKey][id] = nv;
-                save(); ren();
+            if (mode) {
+                const pay = parseFloat(prompt(`Hai già pagato €${alreadyPaid.toFixed(2)}. Quanto versi oggi? (Rimanente: €${remaining.toFixed(2)})`, remaining));
+                if (!isNaN(pay) && pay > 0) {
+                    s.partialPayments[id] = alreadyPaid + pay;
+                    s.savings -= pay;
+                    if (s.partialPayments[id] >= baseVal) {
+                        if(!s.paid.includes(id)) s.paid.push(id);
+                    }
+                    save(); ren();
+                }
+            } else {
+                const nv = parseFloat(prompt(`Nuovo importo totale per ${i.name} (solo questo mese):`, baseVal));
+                if(!isNaN(nv)) {
+                    if(!s.exceptions[monthKey]) s.exceptions[monthKey] = {};
+                    s.exceptions[monthKey][id] = nv;
+                    save(); ren();
+                }
             }
         }
 
@@ -207,24 +226,22 @@
             const now = new Date(); const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
             document.getElementById('headerMonth').innerText = mNames[now.getMonth()] + " " + now.getFullYear();
             
-            let incTotalMonth = 0, fixTotalMonth = 0;
-            let incRemaining = 0, fixRemaining = 0;
+            let incRemaining = 0, fixRemaining = 0, incTotal = 0, fixTotal = 0;
             
             s.items.forEach(i => { 
                 if(!i.months || i.months.includes(now.getMonth())) { 
                     const valM = (s.exceptions[monthKey] && s.exceptions[monthKey][i.id] !== undefined) ? s.exceptions[monthKey][i.id] : i.val;
+                    const paidPart = s.partialPayments[i.id] || 0;
                     if(i.type==='income') {
-                        incTotalMonth += valM;
-                        if(!s.paid.includes(i.id)) incRemaining += valM;
+                        incTotal += valM;
+                        if(!s.paid.includes(i.id)) incRemaining += (valM - paidPart);
                     } else {
-                        fixTotalMonth += valM;
-                        if(!s.paid.includes(i.id)) fixRemaining += valM;
+                        fixTotal += valM;
+                        if(!s.paid.includes(i.id)) fixRemaining += (valM - paidPart);
                     }
                 }
             });
 
-            // Calcolo corretto del previsto: Patrimonio attuale + Entrate non spuntate - Uscite non spuntate
-            // Nota: La quota shopping del mese corrente è già stata detratta all'inizio del mese.
             const predictedEnd = s.savings + incRemaining - fixRemaining;
             
             document.getElementById('totalDisplay').innerText = `€ ${s.savings.toFixed(2)}`;
@@ -237,14 +254,16 @@
             s.items.filter(i => (!i.months || i.months.includes(now.getMonth()))).forEach(i => {
                 const p = s.paid.includes(i.id);
                 const valM = (s.exceptions[monthKey] && s.exceptions[monthKey][i.id] !== undefined) ? s.exceptions[monthKey][i.id] : i.val;
+                const partial = s.partialPayments[i.id] || 0;
+                
                 list.innerHTML += `<div class="checklist-item">
                     <div style="display:flex;align-items:center;gap:10px" onclick="togP(${i.id}, ${valM}, '${i.type}')">
                         <div class="check-circle ${p?'checked':''}">${p?'✓':''}</div>
                         <span style="${p?'text-decoration:line-through;color:#86868b':''}">${i.name}</span>
                     </div>
-                    <div style="text-align:right; cursor:pointer" onclick="editValHome(${i.id})">
-                        <b>€${valM.toFixed(2)}</b>
-                        <div style="font-size:10px; color:var(--gray)">Modifica</div>
+                    <div style="text-align:right; cursor:pointer" onclick="managePayment(${i.id})">
+                        <b style="color: ${partial > 0 && !p ? 'var(--success)' : 'inherit'}">€${(valM - partial).toFixed(2)}</b>
+                        <div style="font-size:10px; color:var(--gray)">${p ? 'Pagato' : (partial > 0 ? 'Mancano' : 'Dettagli')}</div>
                     </div>
                 </div>`;
             });
@@ -260,15 +279,27 @@
                 <div style="display:flex;align-items:center;gap:12px"><b>€${i.val.toFixed(2)}</b><i data-lucide="trash-2" onclick="s.items=s.items.filter(x=>x.id!==${i.id});save();ren();" style="width:18px;color:red;cursor:pointer"></i></div></div>`; 
             });
             
-            updateChart(incTotalMonth, fixTotalMonth); lucide.createIcons();
+            updateChart(incTotal, fixTotal); lucide.createIcons();
             document.getElementById('bs').value = s.savings;
             document.getElementById('spRange').value = s.shopPercent;
             document.getElementById('percVal').innerText = s.shopPercent;
         }
 
         function togP(id, val, type) {
-            if(s.paid.includes(id)) { s.paid = s.paid.filter(x => x !== id); type==='income'?s.savings-=val:s.savings+=val; }
-            else { s.paid.push(id); type==='income'?s.savings+=val:s.savings-=val; }
+            const alreadyPartial = s.partialPayments[id] || 0;
+            const remainingToFinish = val - alreadyPartial;
+
+            if(s.paid.includes(id)) {
+                s.paid = s.paid.filter(x => x !== id);
+                // Se tolgo la spunta, riporto il patrimonio a prima del saldo finale
+                type==='income'?s.savings-=remainingToFinish : s.savings+=remainingToFinish;
+                s.partialPayments[id] = alreadyPartial; 
+            } else {
+                s.paid.push(id);
+                // Saldo l'intera parte mancante
+                type==='income'?s.savings+=remainingToFinish : s.savings-=remainingToFinish;
+                s.partialPayments[id] = val;
+            }
             save(); ren();
         }
 
@@ -286,32 +317,14 @@
             let rb = s.savings; const now = new Date();
             for(let i = 0; i < 6; i++) {
                 let mIdx = (now.getMonth() + i) % 12;
-                let inc = 0, fix = 0; 
-                let listHtmlIn = '', listHtmlOut = '';
-                
-                s.items.forEach(item => { 
-                    if(!item.months || item.months.includes(mIdx)) { 
-                        if(item.type==='income') {
-                            inc += item.val;
-                            listHtmlIn += `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;color:var(--success)"><span>${item.name}</span><b>+€${item.val.toFixed(2)}</b></div>`;
-                        } else { 
-                            fix += item.val; 
-                            listHtmlOut += `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>${item.name}</span><b>-€${item.val.toFixed(2)}</b></div>`; 
-                        }
-                    }
-                });
-                const net = inc - fix; 
-                const shop = net > 0 ? net * (s.shopPercent/100) : 0; 
-                const sav = net - shop;
+                let inc = 0, fix = 0; let listIn = '', listOut = '';
+                s.items.forEach(item => { if(!item.months || item.months.includes(mIdx)) { if(item.type==='income') { inc+=item.val; listIn+=`<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;color:var(--success)"><span>${item.name}</span><b>+€${item.val.toFixed(2)}</b></div>`; } else { fix+=item.val; listOut+=`<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>${item.name}</span><b>-€${item.val.toFixed(2)}</b></div>`; }}});
+                const net = inc - fix; const shop = net > 0 ? net * (s.shopPercent/100) : 0; const sav = net - shop;
                 if(i > 0) rb += sav;
-                
                 cont.innerHTML += `<div class="glass-card" onclick="this.querySelector('.drawer').classList.toggle('open')">
                     <div style="display:flex;justify-content:space-between"><b>${mNames[mIdx]}</b><span>€${rb.toFixed(2)}</span></div>
                     <div style="height:6px; background:rgba(0,0,0,0.05); border-radius:10px; margin:12px 0; display:flex; overflow:hidden"><div style="width:${inc > 0 ? (fix/inc)*100 : 0}%; background:#000"></div><div style="width:${inc > 0 ? (shop/inc)*100 : 0}%; background:#86868b"></div></div>
-                    <div class="drawer">
-                        <div class="label" style="color:var(--success)">Entrate</div>${listHtmlIn || '<div style="font-size:11px">Nessuna</div>'}
-                        <div class="label" style="margin-top:10px">Uscite Fisse</div>${listHtmlOut || '<div style="font-size:11px">Nessuna</div>'}
-                    </div></div>`;
+                    <div class="drawer"><div class="label" style="color:var(--success)">Entrate</div>${listIn || 'Nessuna'}<div class="label" style="margin-top:10px">Uscite</div>${listOut || 'Nessuna'}</div></div>`;
             }
         }
 
@@ -336,11 +349,11 @@
         function exportData() { navigator.clipboard.writeText(btoa(JSON.stringify(s))).then(() => alert("Backup copiato!")); }
         function addShop() {
             const v = parseFloat(document.getElementById('sv').value);
-            if(v && s.shopWallet >= v) {
+            if(v) { // Rimosso il blocco del saldo insufficiente
                 s.shopWallet -= v;
                 s.shopHistory.push({ id: Date.now(), n: document.getElementById('sn').value || "Shopping", v, d: new Date().toISOString() });
                 document.getElementById('sv').value = ''; document.getElementById('sn').value = ''; save(); ren();
-            } else { alert("Budget insufficiente!"); }
+            }
         }
         function delShop(id) {
             const i = s.shopHistory.find(h => h.id === id);
