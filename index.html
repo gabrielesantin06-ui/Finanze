@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Finance OS</title>
+    <title>Finance OS Pro</title>
     
     <link rel="apple-touch-icon" href="https://github.com/gabrielesantin06-ui/Finanze/blob/main/icona%20finanze.jpg?raw=true">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -11,32 +11,33 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        :root { --bg: #ffffff; --glass: rgba(255, 255, 255, 0.7); --glass-border: rgba(255, 255, 255, 0.4); --text: #000; --gray: #86868b; --accent: #000; --danger: #ff3b30; }
+        :root { --bg: #ffffff; --glass: rgba(255, 255, 255, 0.75); --glass-border: rgba(255, 255, 255, 0.4); --text: #000; --gray: #86868b; --accent: #000; }
         body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f5f5f7 0%, #ffffff 100%); background-attachment: fixed; margin: 0; padding: env(safe-area-inset-top) 20px 140px; -webkit-font-smoothing: antialiased; min-height: 100vh; color: var(--text); }
         
         .page-header { padding: 40px 0 10px 10px; }
         .page-header h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.04em; margin: 0; }
-        .page-header span { color: var(--gray); font-size: 14px; font-weight: 600; text-transform: uppercase; }
+        .page-header span { color: var(--gray); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
 
-        .glass-card { background: var(--glass); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); border-radius: 24px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--glass-border); box-shadow: 0 4px 24px rgba(0,0,0,0.04); overflow: hidden; }
+        .glass-card { background: var(--glass); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); border-radius: 24px; padding: 22px; margin-bottom: 16px; border: 1px solid var(--glass-border); box-shadow: 0 4px 24px rgba(0,0,0,0.04); }
         .label { color: var(--gray); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-bottom: 8px; display: block; }
         
         .amount { font-size: 38px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 12px; letter-spacing: -0.05em; }
-        .amount.blurred span { filter: blur(15px); opacity: 0.3; }
+        .amount.blurred span { filter: blur(15px); opacity: 0.2; }
 
         .checklist-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
         .check-circle { width: 22px; height: 22px; border: 2px solid #d1d1d6; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
         .check-circle.checked { background: var(--accent); border-color: var(--accent); color: white; }
         
-        .drawer { max-height: 0; opacity: 0; transition: all 0.4s ease; pointer-events: none; overflow: hidden; }
-        .drawer.open { max-height: 600px; opacity: 1; pointer-events: auto; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.05); }
+        .drawer { max-height: 0; opacity: 0; transition: all 0.4s ease; overflow: hidden; }
+        .drawer.open { max-height: 600px; opacity: 1; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.05); }
 
-        .tab-bar { position: fixed; bottom: 30px; left: 20px; right: 20px; background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(25px) saturate(200%); -webkit-backdrop-filter: blur(25px) saturate(200%); display: flex; padding: 12px; border-radius: 30px; border: 1px solid var(--glass-border); box-shadow: 0 10px 30px rgba(0,0,0,0.08); z-index: 1000; }
-        .tab-item { color: var(--gray); text-align: center; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; font-weight: 600; cursor: pointer; }
+        .tab-bar { position: fixed; bottom: 30px; left: 20px; right: 20px; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(25px) saturate(200%); -webkit-backdrop-filter: blur(25px) saturate(200%); display: flex; padding: 12px; border-radius: 30px; border: 1px solid var(--glass-border); box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 9999; }
+        .tab-item { color: var(--gray); text-align: center; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; font-weight: 600; cursor: pointer; }
         .tab-item.active { color: var(--accent); }
-        .tab-item i { width: 22px; height: 22px; }
+        .tab-item svg { width: 22px; height: 22px; margin-bottom: 2px; }
 
         .view { display: none; }
         .view.active { display: block; animation: glassFade 0.4s ease; }
@@ -46,15 +47,23 @@
         .btn-outline { background: rgba(0,0,0,0.03); color: var(--text); border: 1px solid #000; margin-top: 10px; }
         
         input, select { font-family: 'Inter', sans-serif; background: rgba(0,0,0,0.04); border: none; padding: 14px; border-radius: 12px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 16px; outline: none; }
+        
+        /* Slider Style */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin: 15px 0; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #e5e5e7; border-radius: 3px; }
+        input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radius: 50%; background: #000; cursor: pointer; -webkit-appearance: none; margin-top: -9px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+
         .m-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
         .m-btn { background: #fff; border: 1px solid #ddd; font-size: 10px; padding: 6px; border-radius: 8px; text-align: center; font-weight: 600; cursor: pointer; }
         .m-btn.active { background: #000; color: #fff; border-color: #000; }
+        
+        #chart-wrap { width: 100%; height: 200px; display: flex; justify-content: center; }
     </style>
 </head>
 <body>
 
     <div id="home" class="view active">
-        <div class="page-header"><span id="headerMonth">Mese Corrente</span><h1>Riepilogo</h1></div>
+        <div class="page-header"><span id="headerMonth">Mese</span><h1>Riepilogo</h1></div>
         <div class="glass-card" style="text-align: center;">
             <span class="label">Patrimonio Reale</span>
             <div class="amount" id="amtContainer"><span id="totalDisplay">€ 0.00</span><div onclick="toggleEye()"><i data-lucide="eye" id="eyeIcon"></i></div></div>
@@ -66,7 +75,7 @@
         <div class="glass-card"><span class="label">Checklist Spese</span><div id="checklist"></div></div>
         <div class="glass-card">
             <span class="label">Registra Shopping</span>
-            <input type="text" id="sn" placeholder="Titolo"><input type="number" id="sv" inputmode="decimal" placeholder="€">
+            <input type="text" id="sn" placeholder="Titolo spesa"><input type="number" id="sv" inputmode="decimal" placeholder="€">
             <button onclick="addShop()">Aggiungi Spesa</button>
         </div>
     </div>
@@ -84,13 +93,19 @@
 
     <div id="setup" class="view">
         <div class="page-header"><h1>Setup</h1></div>
+        
         <div class="glass-card">
-            <input type="number" id="bs" onchange="upd()" placeholder="Saldo attuale">
-            <input type="number" id="sp" onchange="upd()" placeholder="% Shopping">
+            <span class="label">Distribuzione Mensile</span>
+            <div id="chart-wrap"><canvas id="pieChart"></canvas></div>
+            <div style="margin-top:20px;">
+                <span class="label">Percentuale Shopping: <b id="percVal">20</b>%</span>
+                <input type="range" id="spRange" min="0" max="100" value="20" oninput="updRange(this.value)">
+            </div>
         </div>
+
         <div class="glass-card">
-            <span class="label">Voci Ricorrenti</span>
-            <input type="text" id="in" placeholder="Nome"><input type="number" id="iv" placeholder="€">
+            <span class="label">Aggiungi Voce Ricorrente</span>
+            <input type="text" id="in" placeholder="Nome (es. Stipendio, Affitto)"><input type="number" id="iv" placeholder="€">
             <select id="it"><option value="income">Entrata (+)</option><option value="expense">Uscita Fissa (-)</option></select>
             <div class="m-grid" id="mGrid">
                 <div class="m-btn active" data-m="0">GEN</div><div class="m-btn active" data-m="1">FEB</div><div class="m-btn active" data-m="2">MAR</div><div class="m-btn active" data-m="3">APR</div>
@@ -100,47 +115,50 @@
             <button onclick="addItem()">Salva Voce</button>
         </div>
         <div id="itemsList"></div>
+        
         <div class="glass-card">
+            <span class="label">Patrimonio Iniziale</span>
+            <input type="number" id="bs" onchange="upd()" placeholder="Saldo attuale">
             <button class="btn-outline" onclick="exportData()">Copia Backup</button>
             <button class="btn-outline" onclick="importData()" style="margin-top:10px; background:#000; color:#fff">Ripristina Dati</button>
         </div>
     </div>
 
     <nav class="tab-bar">
-        <div class="tab-item active" onclick="swi('home', this)"><i data-lucide="home"></i><span>Casa</span></div>
-        <div class="tab-item" onclick="swi('prospect', this)"><i data-lucide="calendar"></i><span>Mesi</span></div>
-        <div class="tab-item" onclick="swi('setup', this)"><i data-lucide="settings"></i><span>Setup</span></div>
+        <div class="tab-item active" onclick="swi('home', this)"><i data-lucide="home"></i>Casa</div>
+        <div class="tab-item" onclick="swi('prospect', this)"><i data-lucide="calendar"></i>Mesi</div>
+        <div class="tab-item" onclick="swi('setup', this)"><i data-lucide="settings"></i>Setup</div>
     </nav>
 
     <script>
         let s = JSON.parse(localStorage.getItem('fin_v9')) || { savings: 0, items: [], shopPercent: 20, shopWallet: 0, shopHistory: [], paid: [], hidden: false };
+        let myChart = null;
         const mNames = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
-
-        document.querySelectorAll('.m-btn').forEach(b => b.onclick = () => b.classList.toggle('active'));
-
-        function upd() { 
-            s.savings = parseFloat(document.getElementById('bs').value) || 0; 
-            s.shopPercent = parseFloat(document.getElementById('sp').value) || 0; 
-            save(); ren(); 
-        }
 
         function save() { localStorage.setItem('fin_v9', JSON.stringify(s)); }
 
-        function importData() {
-            const c = prompt("Incolla il codice di backup qui:");
-            if(c) {
-                try {
-                    const decoded = JSON.parse(atob(c));
-                    s = decoded;
-                    save();
-                    location.reload(); 
-                } catch(e) { alert("Codice non valido!"); }
-            }
+        function upd() { 
+            s.savings = parseFloat(document.getElementById('bs').value) || 0; 
+            s.shopPercent = parseFloat(document.getElementById('spRange').value) || 0; 
+            save(); ren(); 
         }
 
-        function exportData() {
-            const str = btoa(JSON.stringify(s));
-            navigator.clipboard.writeText(str).then(() => alert("Backup copiato!"));
+        function updRange(v) {
+            document.getElementById('percVal').innerText = v;
+            s.shopPercent = parseFloat(v);
+            save(); ren();
+        }
+
+        function importData() {
+            const c = prompt("Incolla backup:");
+            if(c) {
+                try {
+                    s = JSON.parse(atob(c));
+                    if(!s.paid) s.paid = [];
+                    save();
+                    location.reload();
+                } catch(e) { alert("Errore backup!"); }
+            }
         }
 
         function addItem() {
@@ -153,7 +171,7 @@
 
         function editVal(id) {
             const i = s.items.find(x => x.id === id);
-            const nv = parseFloat(prompt(`Nuovo importo per ${i.name}:`, i.val));
+            const nv = parseFloat(prompt(`Importo reale per ${i.name}:`, i.val));
             if(!isNaN(nv)) {
                 const diff = i.val - nv;
                 s.savings += diff;
@@ -162,22 +180,24 @@
             }
         }
 
-        function addShop() {
-            const v = parseFloat(document.getElementById('sv').value);
-            if(v) { s.shopWallet -= v; s.savings -= v; s.shopHistory.push({ v, d: new Date().toISOString() }); 
-            document.getElementById('sv').value = ''; document.getElementById('sn').value = ''; save(); ren(); }
-        }
-
         function ren() {
             const now = new Date(); document.getElementById('headerMonth').innerText = mNames[now.getMonth()] + " " + now.getFullYear();
             let inc = 0, fix = 0; 
             s.items.forEach(i => { if(!i.months || i.months.includes(now.getMonth())) { if(i.type==='income') inc+=i.val; else fix+=i.val; }});
             
             document.getElementById('totalDisplay').innerText = `€ ${s.savings.toFixed(2)}`;
-            document.getElementById('shopDisplay').innerText = `€ ${s.shopWallet.toFixed(2)}`;
             document.getElementById('fixDisplay').innerText = `€ ${fix.toFixed(2)}`;
-            document.getElementById('amtContainer').className = s.hidden ? 'amount blurred' : 'amount';
             
+            // Calcolo Wallet Shopping
+            const net = inc - fix;
+            const totalMonthShop = net > 0 ? (net * (s.shopPercent / 100)) : 0;
+            const spent = s.shopHistory.filter(h => new Date(h.d).getMonth() === now.getMonth()).reduce((a, b) => a + b.v, 0);
+            s.shopWallet = totalMonthShop - spent;
+            document.getElementById('shopDisplay').innerText = `€ ${s.shopWallet.toFixed(2)}`;
+
+            document.getElementById('amtContainer').className = s.hidden ? 'amount blurred' : 'amount';
+            document.getElementById('eyeIcon').setAttribute('data-lucide', s.hidden ? 'eye-off' : 'eye');
+
             const list = document.getElementById('checklist'); list.innerHTML = '';
             s.items.filter(i => i.type === 'expense' && (!i.months || i.months.includes(now.getMonth()))).forEach(i => {
                 const p = s.paid.includes(i.id);
@@ -189,9 +209,39 @@
                     <div style="text-align:right" onclick="editVal(${i.id})"><b>€${i.val.toFixed(2)}</b><div style="font-size:10px;color:#86868b">Modifica</div></div>
                 </div>`;
             });
+            
             const iL = document.getElementById('itemsList'); iL.innerHTML = '';
-            s.items.forEach(i => { iL.innerHTML += `<div class="glass-card" style="display:flex;justify-content:space-between"><span>${i.name}</span><span>€${i.val.toFixed(2)} <i data-lucide="trash-2" onclick="delI(${i.id})" style="width:14px;color:red;vertical-align:middle;cursor:pointer"></i></span></div>`; });
+            s.items.forEach(i => { iL.innerHTML += `<div class="glass-card" style="display:flex;justify-content:space-between;padding:15px;margin-bottom:8px"><span><b>${i.name}</b></span><span>€${i.val.toFixed(2)} <i data-lucide="trash-2" onclick="delI(${i.id})" style="width:14px;color:red;cursor:pointer"></i></span></div>`; });
+            
+            updateChart(inc, fix);
             lucide.createIcons();
+        }
+
+        function updateChart(inc, fix) {
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            const net = inc - fix > 0 ? inc - fix : 0;
+            const shop = net * (s.shopPercent / 100);
+            const sav = net - shop;
+            
+            const data = {
+                labels: ['Fisse', 'Shop', 'Risparmio'],
+                datasets: [{
+                    data: [fix, shop, sav],
+                    backgroundColor: ['#000000', '#86868b', '#e5e5e7'],
+                    borderWidth: 0
+                }]
+            };
+
+            if(myChart) {
+                myChart.data = data;
+                myChart.update();
+            } else {
+                myChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: data,
+                    options: { cutout: '70%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
+                });
+            }
         }
 
         function renP() {
@@ -204,23 +254,21 @@
                 const net = inc - fix; const shop = net > 0 ? net * (s.shopPercent/100) : 0; const sav = net - shop;
                 if(i > 0) rb += sav;
                 cont.innerHTML += `<div class="glass-card" onclick="this.querySelector('.drawer').classList.toggle('open')">
-                    <div style="display:flex;justify-content:space-between;align-items:center"><b>${mNames[mIdx]}</b><span>€${rb.toFixed(2)}</span></div>
+                    <div style="display:flex;justify-content:space-between"><b>${mNames[mIdx]}</b><span>€${rb.toFixed(2)}</span></div>
                     <div style="height:6px; background:rgba(0,0,0,0.05); border-radius:10px; margin:12px 0; display:flex; overflow:hidden"><div style="width:${(fix/inc)*100}%; background:#000"></div><div style="width:${(shop/inc)*100}%; background:#86868b"></div></div>
-                    <div class="drawer"><div class="label">Dettaglio</div>${listHtml}<div style="border-top:1px solid #ddd; margin-top:10px; padding-top:10px; font-size:12px"><div style="display:flex;justify-content:space-between"><span>Shop:</span><b>€${shop.toFixed(2)}</b></div><div style="display:flex;justify-content:space-between"><span>Risparmio:</span><b>€${sav.toFixed(2)}</b></div></div></div></div>`;
+                    <div class="drawer"><div class="label">Dettaglio</div>${listHtml}</div></div>`;
             }
         }
 
         function calcFuture() {
-            const mCount = parseInt(document.getElementById('futureMonths').value);
-            if(isNaN(mCount)) return;
-            let futBal = s.savings; const now = new Date();
-            for(let i = 1; i <= mCount; i++) {
+            const m = parseInt(document.getElementById('futureMonths').value); if(isNaN(m)) return;
+            let f = s.savings; const now = new Date();
+            for(let i = 1; i <= m; i++) {
                 let mIdx = (now.getMonth() + i) % 12;
-                let inc = 0, fix = 0;
-                s.items.forEach(item => { if(!item.months || item.months.includes(mIdx)) { if(item.type==='income') inc+=item.val; else fix+=item.val; }});
-                const net = inc - fix; futBal += (net > 0 ? net * (1 - s.shopPercent/100) : net);
+                let inc = 0, fix = 0; s.items.forEach(it => { if(!it.months || it.months.includes(mIdx)) { if(it.type==='income') inc+=it.val; else fix+=it.val; }});
+                const net = inc - fix; f += (net > 0 ? net * (1 - s.shopPercent/100) : net);
             }
-            document.getElementById('futureResult').innerText = `Stima: € ${futBal.toFixed(2)}`;
+            document.getElementById('futureResult').innerText = `Stima: € ${f.toFixed(2)}`;
         }
 
         function swi(id, el) { 
@@ -232,9 +280,15 @@
         function toggleEye() { s.hidden = !s.hidden; save(); ren(); }
         function togP(id) { if(s.paid.includes(id)) s.paid = s.paid.filter(x => x !== id); else s.paid.push(id); save(); ren(); }
         function delI(id) { s.items = s.items.filter(x => x.id !== id); upd(); }
+        function exportData() { navigator.clipboard.writeText(btoa(JSON.stringify(s))).then(() => alert("Backup copiato!")); }
 
-        document.getElementById('bs').value = s.savings; document.getElementById('sp').value = s.shopPercent;
-        ren(); lucide.createIcons();
+        document.getElementById('bs').value = s.savings;
+        document.getElementById('spRange').value = s.shopPercent;
+        document.getElementById('percVal').innerText = s.shopPercent;
+        
+        document.querySelectorAll('.m-btn').forEach(b => b.onclick = () => { b.classList.toggle('active'); });
+
+        window.onload = () => { ren(); lucide.createIcons(); };
     </script>
 </body>
 </html>
