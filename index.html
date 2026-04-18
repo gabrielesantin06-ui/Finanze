@@ -129,7 +129,15 @@
     </nav>
 
     <script>
-        let s = JSON.parse(localStorage.getItem('fin_v12')) || { savings: 0, items: [], shopPercent: 20, shopWallet: 0, shopHistory: [], paid: [], hidden: false, exceptions: {}, lastMonthProcessed: null };
+        // Caricamento con protezione bug dati mancanti
+        const rawData = localStorage.getItem('fin_v12');
+        let s = rawData ? JSON.parse(rawData) : { savings: 0, items: [], shopPercent: 20, shopWallet: 0, shopHistory: [], paid: [], hidden: false, exceptions: {}, lastMonthProcessed: null };
+        
+        // Fix per evitare crash se i dati importati sono vecchi
+        if (!s.exceptions) s.exceptions = {};
+        if (!s.shopHistory) s.shopHistory = [];
+        if (!s.paid) s.paid = [];
+
         let myChart = null;
         const mNames = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
 
@@ -138,18 +146,20 @@
         function checkMonthChange() {
             const now = new Date();
             const currentM = `${now.getFullYear()}-${now.getMonth()}`;
-            if (s.lastMonthProcessed !== currentM) {
-                // Esegui prelievo automatico quota shopping
+            if (s.lastMonthProcessed !== currentM && s.lastMonthProcessed !== null) {
                 let inc = 0, fix = 0;
                 s.items.forEach(i => { if(!i.months || i.months.includes(now.getMonth())) { if(i.type==='income') inc+=i.val; else fix+=i.val; }});
                 const net = inc - fix;
                 if(net > 0) {
                     const quota = net * (s.shopPercent / 100);
                     s.savings -= quota;
-                    s.shopWallet += quota; // CUMULATIVO
+                    s.shopWallet += quota;
                 }
                 s.lastMonthProcessed = currentM;
-                s.paid = []; // Reset checklist
+                s.paid = [];
+                save();
+            } else if (s.lastMonthProcessed === null) {
+                s.lastMonthProcessed = currentM;
                 save();
             }
         }
@@ -157,33 +167,30 @@
         function upd() { s.savings = parseFloat(document.getElementById('bs').value) || 0; save(); ren(); }
         function updRange(v) { document.getElementById('percVal').innerText = v; s.shopPercent = parseFloat(v); save(); ren(); }
 
+        function importData() {
+            const c = prompt("Incolla backup:");
+            if(c) {
+                try {
+                    let imported = JSON.parse(atob(c));
+                    // Normalizzazione dati
+                    if (!imported.exceptions) imported.exceptions = {};
+                    if (!imported.shopHistory) imported.shopHistory = [];
+                    if (!imported.paid) imported.paid = [];
+                    if (imported.shopPercent === undefined) imported.shopPercent = 20;
+                    
+                    s = imported;
+                    save();
+                    location.reload();
+                } catch(e) { alert("Errore: il codice incollato non è valido o è corrotto."); }
+            }
+        }
+
         function addItem() {
             const n = document.getElementById('in').value, v = parseFloat(document.getElementById('iv').value), t = document.getElementById('it').value;
             const ms = Array.from(document.querySelectorAll('#mGrid .m-btn.active')).map(b => parseInt(b.dataset.m));
             if(!n || isNaN(v)) return;
             s.items.push({ id: Date.now(), name: n, val: v, type: t, months: ms });
             document.getElementById('in').value = ''; document.getElementById('iv').value = ''; upd();
-        }
-
-        function editValHome(id) {
-            const now = new Date(); const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
-            const i = s.items.find(x => x.id === id);
-            const nv = parseFloat(prompt(`Importo solo per questo mese:`, i.val));
-            if(!isNaN(nv)) { if(!s.exceptions[monthKey]) s.exceptions[monthKey] = {}; s.exceptions[monthKey][id] = nv; save(); ren(); }
-        }
-
-        function addShop() {
-            const v = parseFloat(document.getElementById('sv').value);
-            if(v && s.shopWallet >= v) {
-                s.shopWallet -= v;
-                s.shopHistory.push({ id: Date.now(), n: document.getElementById('sn').value || "Shopping", v, d: new Date().toISOString() });
-                document.getElementById('sv').value = ''; document.getElementById('sn').value = ''; save(); ren();
-            } else { alert("Budget insufficiente!"); }
-        }
-
-        function delShop(id) {
-            const i = s.shopHistory.find(h => h.id === id);
-            if(i) { s.shopWallet += i.v; s.shopHistory = s.shopHistory.filter(h => h.id !== id); save(); ren(); }
         }
 
         function ren() {
@@ -212,7 +219,7 @@
                         <div class="check-circle ${p?'checked':''}">${p?'✓':''}</div>
                         <span style="${p?'text-decoration:line-through;color:#86868b':''}">${i.name}</span>
                     </div>
-                    <div style="text-align:right;cursor:pointer" onclick="${i.type==='expense' ? `editValHome(${i.id})` : ''}"><b>€${valM.toFixed(2)}</b></div>
+                    <b>€${valM.toFixed(2)}</b>
                 </div>`;
             });
             
@@ -283,7 +290,18 @@
         }
         function toggleEye() { s.hidden = !s.hidden; save(); ren(); }
         function exportData() { navigator.clipboard.writeText(btoa(JSON.stringify(s))).then(() => alert("Backup copiato!")); }
-        function importData() { const c = prompt("Incolla backup:"); if(c) { s = JSON.parse(atob(c)); save(); location.reload(); } }
+        function addShop() {
+            const v = parseFloat(document.getElementById('sv').value);
+            if(v && s.shopWallet >= v) {
+                s.shopWallet -= v;
+                s.shopHistory.push({ id: Date.now(), n: document.getElementById('sn').value || "Shopping", v, d: new Date().toISOString() });
+                document.getElementById('sv').value = ''; document.getElementById('sn').value = ''; save(); ren();
+            } else { alert("Budget insufficiente!"); }
+        }
+        function delShop(id) {
+            const i = s.shopHistory.find(h => h.id === id);
+            if(i) { s.shopWallet += i.v; s.shopHistory = s.shopHistory.filter(h => h.id !== id); save(); ren(); }
+        }
 
         document.querySelectorAll('.m-btn').forEach(b => b.onclick = () => b.classList.toggle('active'));
         window.onload = () => { ren(); lucide.createIcons(); };
